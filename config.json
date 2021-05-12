@@ -5,6 +5,16 @@
         "dogeusdt",
         "shibusdt",
         "eosusdt",
-        "ethbusd"
-    ]
+        "ethbusd",
+        "bnbusdt",
+        "xrpusdt",
+        "ltcusdt",
+        "ethbtc",
+        "bnbbtc"
+    ],
+    "full_fetch_interval": 3600,
+    "full_fetch_limit": 1000,
+    "stream_interval": 100,
+    "log_to_console": true,
+    "db_name": "archive"
 }

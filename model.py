@@ -8,12 +8,20 @@ from infi.clickhouse_orm.fields import (
     UInt8Field,
     Float64Field,
     UInt64Field,
-    Field,
 )
 from infi.clickhouse_orm.database import Database, DatabaseException
 from infi.clickhouse_orm.engines import MergeTree
 from infi.clickhouse_orm.funcs import F
 from enum import IntEnum
+from config import Config
+import logging
+
+CONFIG = Config()
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s %(message)s",
+    datefmt="%m/%d/%Y %I:%M:%S %p",
+    level=logging.INFO,
+)
 
 
 class LoggingLevel(IntEnum):
@@ -39,6 +47,8 @@ class Logger:
         self.db = database
 
     def log_msg(self, msg: str, level: LoggingLevel, payload: str = "") -> None:
+        if CONFIG.log_to_console:
+            logging.log(level, msg)
         self.db.insert(
             [
                 LoggingMsg(
@@ -80,10 +90,10 @@ class DiffDepthStream(Model):
 
 
 class DiffDepthStreamDispatcher:
-    def __init__(self, database: Database, batch_size: int):
+    def __init__(self, database: Database):
         self.buffer = []
         self.db = database
-        self.batch_size = batch_size
+        self.batch_size = CONFIG.dispatcher_buffer_size
 
     def insert(
         self,
@@ -126,6 +136,6 @@ class DiffDepthStreamDispatcher:
 
 
 if __name__ == "__main__":
-    db = Database("archive")
+    db = Database(CONFIG.db_name)
     for model in [LoggingMsg, DepthSnapshot, DiffDepthStream]:
         db.create_table(model)

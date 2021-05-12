@@ -1,10 +1,9 @@
-from asyncio.events import AbstractEventLoop, get_event_loop
+from asyncio.events import AbstractEventLoop
 from typing import List
 from aiohttp.client import ClientSession
 from infi.clickhouse_orm.database import Database
-from infi.clickhouse_orm.engines import Log
 from model import DepthSnapshot, DiffDepthStreamDispatcher, Logger, LoggingLevel
-from datetime import datetime, tzinfo
+from datetime import datetime
 import asyncio
 import aiohttp
 from pydantic import BaseModel, ValidationError
@@ -31,16 +30,16 @@ class DepthSnapshotMsg(BaseModel):
     asks: List[List[float]]
 
 
-def depth_stream_url(symbol: str, speed: int = 1000) -> str:
+def depth_stream_url(symbol: str) -> str:
+    speed = CONFIG.stream_interval
     assert speed in (1000, 100), "speed must be 1000 or 100"
     symbol = symbol.lower()
     endpoint = f"{symbol}@depth" if speed == 1000 else f"{symbol}@depth@100ms"
     return f"wss://stream.binance.com:9443/ws/{endpoint}"
 
 
-async def get_full_depth(
-    symbol: str, session: ClientSession, database: Database, limit: int = 1000
-):
+async def get_full_depth(symbol: str, session: ClientSession, database: Database):
+    limit = CONFIG.full_fetch_limit
     url = f"https://api.binance.com/api/v3/depth?symbol={symbol}&limit={limit}"
     async with session.get(url) as resp:
         resp_json = await resp.json()
@@ -64,13 +63,11 @@ async def handle_depth_stream(
     database: Database,
     logger: Logger,
     loop: AbstractEventLoop,
-    speed: int = 1000,
-    full_fetch_interval: int = 60 * 60,
 ):
     next_full_fetch = time()
     logger.log_msg(f"Connecting to {symbol} stream", LoggingLevel.INFO, symbol)
     while True:
-        async with session.ws_connect(depth_stream_url(symbol, speed)) as ws:
+        async with session.ws_connect(depth_stream_url(symbol)) as ws:
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     try:
@@ -78,7 +75,7 @@ async def handle_depth_stream(
                     except ValidationError:
                         print(msg.data)
                         break
-                        
+
                     s = data_raw.E / 1000.0
                     timestamp = datetime.utcfromtimestamp(s)
                     first_update_id = data_raw.U
@@ -90,8 +87,12 @@ async def handle_depth_stream(
                     symbol = data_raw.s
 
                     if next_full_fetch < time():
-                        logger.log_msg(f"Fetching {symbol} full market depth", LoggingLevel.INFO, symbol)
-                        next_full_fetch += full_fetch_interval
+                        logger.log_msg(
+                            f"Fetching {symbol} full market depth",
+                            LoggingLevel.INFO,
+                            symbol,
+                        )
+                        next_full_fetch += CONFIG.full_fetch_interval
                         loop.create_task(get_full_depth(symbol, session, database))
 
                     dispatcher.insert(
@@ -106,19 +107,23 @@ async def handle_depth_stream(
                     )
                 if msg.type == aiohttp.WSMsgType.CLOSE:
                     break
-        logger.log_msg(f"Connection closed for {symbol} stream, retrying.", LoggingLevel.INFO, symbol)
+        logger.log_msg(
+            f"Connection closed for {symbol} stream, retrying.",
+            LoggingLevel.INFO,
+            symbol,
+        )
         next_full_fetch = time
 
 
 async def setup():
     session = aiohttp.ClientSession()
     loop = asyncio.get_event_loop()
-    database = Database("archive")
-    dispatcher = DiffDepthStreamDispatcher(database, 100)
+    database = Database(CONFIG.db_name)
+    dispatcher = DiffDepthStreamDispatcher(database)
     logger = Logger(database)
     for symbol in CONFIG.symbols:
         loop.create_task(
-            handle_depth_stream(symbol, session, dispatcher, database, logger, loop, 100)
+            handle_depth_stream(symbol, session, dispatcher, database, logger, loop)
         )
 
 
