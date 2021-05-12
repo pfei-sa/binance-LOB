@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+binance_com_spot_api.postman_environment.json
+binance_spot_api_v1.postman_collection.json
+test.json
+.vscode/
+.idea/
+database/*
