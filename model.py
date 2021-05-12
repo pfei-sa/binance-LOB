@@ -6,7 +6,7 @@ from infi.clickhouse_orm.fields import (
     DateTime64Field,
     StringField,
     UInt8Field,
-    Decimal128Field,
+    Float64Field,
     UInt64Field,
     Field,
 )
@@ -14,7 +14,6 @@ from infi.clickhouse_orm.database import Database, DatabaseException
 from infi.clickhouse_orm.engines import MergeTree
 from infi.clickhouse_orm.funcs import F
 from enum import IntEnum
-from decimal import Decimal
 
 
 class LoggingLevel(IntEnum):
@@ -35,13 +34,27 @@ class LoggingMsg(Model):
     engine = MergeTree("timestamp", order_by=("timestamp",))
 
 
+class Logger:
+    def __init__(self, database: Database):
+        self.db = database
+
+    def log_msg(self, msg: str, level: LoggingLevel, payload: str = "") -> None:
+        self.db.insert(
+            [
+                LoggingMsg(
+                    timestamp=datetime.utcnow(), msg=msg, level=level, payload=payload
+                )
+            ]
+        )
+
+
 class DepthSnapshot(Model):
     timestamp = DateTime64Field()
     last_update_id = UInt64Field()
-    bids_quantity = ArrayField(Decimal128Field(20))
-    bids_price = ArrayField(Decimal128Field(20))
-    asks_quantity = ArrayField(Decimal128Field(20))
-    asks_price = ArrayField(Decimal128Field(20))
+    bids_quantity = ArrayField(Float64Field())
+    bids_price = ArrayField(Float64Field())
+    asks_quantity = ArrayField(Float64Field())
+    asks_price = ArrayField(Float64Field())
     symbol = StringField()
 
     engine = MergeTree(
@@ -54,10 +67,10 @@ class DiffDepthStream(Model):
     timestamp = DateTime64Field()
     first_update_id = UInt64Field()
     final_update_id = UInt64Field()
-    bids_quantity = ArrayField(Decimal128Field(20))
-    bids_price = ArrayField(Decimal128Field(20))
-    asks_quantity = ArrayField(Decimal128Field(20))
-    asks_price = ArrayField(Decimal128Field(20))
+    bids_quantity = ArrayField(Float64Field())
+    bids_price = ArrayField(Float64Field())
+    asks_quantity = ArrayField(Float64Field())
+    asks_price = ArrayField(Float64Field())
     symbol = StringField()
 
     engine = MergeTree(
@@ -77,10 +90,10 @@ class DiffDepthStreamDispatcher:
         timestamp: datetime,
         first_update_id: int,
         final_update_id: int,
-        bids_quantity: List[Decimal],
-        bids_price: List[Decimal],
-        asks_quantity: List[Decimal],
-        asks_price: List[Decimal],
+        bids_quantity: List[float],
+        bids_price: List[float],
+        asks_quantity: List[float],
+        asks_price: List[float],
         symbol: str,
     ):
         self.buffer.append(
@@ -104,7 +117,7 @@ class DiffDepthStreamDispatcher:
             self.buffer = []
         except DatabaseException as e:
             print(e)
-    
+
     def __len__(self):
         return len(self.buffer)
 
