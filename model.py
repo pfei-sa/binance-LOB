@@ -34,9 +34,9 @@ class LoggingLevel(IntEnum):
 
 
 class LoggingMsg(Model):
-    timestamp = DateTime64Field()
+    timestamp = DateTime64Field(codec="Delta,ZSTD")
     msg = StringField()
-    level = UInt8Field(codec="Delta(4), LZ4")
+    level = UInt8Field(codec="Delta, LZ4")
     payload = StringField(default="")
 
     engine = MergeTree("timestamp", order_by=("timestamp",))
@@ -59,7 +59,7 @@ class Logger:
 
 
 class DepthSnapshot(Model):
-    timestamp = DateTime64Field()
+    timestamp = DateTime64Field(codec="Delta,ZSTD")
     last_update_id = UInt64Field()
     bids_quantity = ArrayField(Float64Field())
     bids_price = ArrayField(Float64Field())
@@ -74,9 +74,9 @@ class DepthSnapshot(Model):
 
 
 class DiffDepthStream(Model):
-    timestamp = DateTime64Field()
-    first_update_id = UInt64Field()
-    final_update_id = UInt64Field()
+    timestamp = DateTime64Field(codec="Delta,ZSTD")
+    first_update_id = UInt64Field(codec="Delta,ZSTD")
+    final_update_id = UInt64Field(codec="Delta,ZSTD")
     bids_quantity = ArrayField(Float64Field())
     bids_price = ArrayField(Float64Field())
     asks_quantity = ArrayField(Float64Field())
