@@ -1,0 +1,4 @@
+infi.clickhouse_orm==2.1.0
+pydantic==1.8.2
+aiohttp==3.7.4.post0
+infi==0.0.1
