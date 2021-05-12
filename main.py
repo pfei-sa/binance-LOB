@@ -3,14 +3,14 @@ from typing import List
 from aiohttp.client import ClientSession
 from infi.clickhouse_orm.database import Database
 from infi.clickhouse_orm.engines import Log
-from model import DiffDepthStreamDispatcher, LoggingMsg, LoggingLevel
-from datetime import datetime
+from model import DepthSnapshot, DiffDepthStreamDispatcher, LoggingMsg, LoggingLevel
+from datetime import datetime, tzinfo
 import asyncio
 import aiohttp
 from pydantic import BaseModel, main
 from decimal import Decimal
-import json
 from time import time
+from config import Config
 
 
 class DiffDepthStreamMsg(BaseModel):
@@ -23,14 +23,35 @@ class DiffDepthStreamMsg(BaseModel):
     a: List[List[Decimal]]  # asks [price, quantity]
 
 
+class DepthSnapshotMsg(BaseModel):
+    lastUpdateId: int
+    bids: List[List[Decimal]]
+    asks: List[List[Decimal]]
+
+
 def depth_stream_url(symbol: str, speed: int = 1000) -> str:
     assert speed in (1000, 100), "speed must be 1000 or 100"
     endpoint = f"{symbol}@depth" if speed == 1000 else f"{symbol}@depth@100ms"
     return f"wss://stream.binance.com:9443/ws/{endpoint}"
 
 
-async def get_full_depth(symbol: str, session: ClientSession):
-    pass
+async def get_full_depth(
+    symbol: str, session: ClientSession, database: Database, limit: int = 1000
+):
+    url = f"https://api.binance.com/api/v3/depth?symbol={symbol}&limit={limit}"
+    async with session.get(url) as resp:
+        resp_json = await resp.json()
+        msg = DepthSnapshotMsg(**resp_json)
+        snapshot = DepthSnapshot(
+            timestamp=datetime.utcnow(),
+            last_update_id=msg.lastUpdateId,
+            bids_quantity=[pairs[1] for pairs in msg.bids],
+            bids_price=[pairs[0] for pairs in msg.bids],
+            asks_quantity=[pairs[1] for pairs in msg.asks],
+            asks_price=[pairs[0] for pairs in msg.asks],
+            symbol=symbol,
+        )
+        database.insert([snapshot])
 
 
 async def handle_depth_stream(
@@ -40,7 +61,7 @@ async def handle_depth_stream(
     database: Database,
     loop: AbstractEventLoop,
     speed: int = 1000,
-    full_fetch_interval: int = 60*60
+    full_fetch_interval: int = 60 * 60,
 ):
     symbol = symbol.lower()
     next_full_fetch = time()
@@ -50,7 +71,7 @@ async def handle_depth_stream(
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     data_raw = DiffDepthStreamMsg(**msg.json())
                     s = data_raw.E / 1000.0
-                    timestamp = datetime.fromtimestamp(s)
+                    timestamp = datetime.utcfromtimestamp(s)
                     first_update_id = data_raw.U
                     final_update_id = data_raw.U
                     bids_quantity = [pairs[1] for pairs in data_raw.b]
@@ -61,7 +82,7 @@ async def handle_depth_stream(
 
                     if next_full_fetch < time():
                         next_full_fetch += full_fetch_interval
-                        loop.create_task(get_full_depth(symbol))
+                        loop.create_task(get_full_depth(symbol, session, database))
 
                     dispatcher.insert(
                         timestamp,
@@ -80,7 +101,9 @@ async def setup():
     loop = asyncio.get_event_loop()
     database = Database("archive")
     dispatcher = DiffDepthStreamDispatcher(database, 100)
-    loop.create_task(handle_depth_stream("btcusdt", session, dispatcher, database, loop, 100))
+    loop.create_task(
+        handle_depth_stream("btcusdt", session, dispatcher, database, loop, 100)
+    )
 
 
 if __name__ == "__main__":
