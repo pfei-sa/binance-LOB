@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from pydantic import BaseSettings
 
@@ -18,8 +18,9 @@ def json_config_settings_source(settings: BaseSettings) -> Dict[str, Any]:
 
 
 class Config(BaseSettings):
-    api_key: str
-    api_secret: str
+    api_key: str = ""
+    api_secret: str = ""
+    symbols: List[str]
 
     class Config:
         env_file_encoding = 'utf-8'

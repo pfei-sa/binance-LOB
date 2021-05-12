@@ -134,4 +134,3 @@ test.json
 .vscode/
 .idea/
 database/*
-config.json
