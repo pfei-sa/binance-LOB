@@ -79,7 +79,7 @@ async def handle_depth_stream(
                     s = data_raw.E / 1000.0
                     timestamp = datetime.utcfromtimestamp(s)
                     first_update_id = data_raw.U
-                    final_update_id = data_raw.U
+                    final_update_id = data_raw.u
                     bids_quantity = [pairs[1] for pairs in data_raw.b]
                     bids_price = [pairs[0] for pairs in data_raw.b]
                     asks_quantity = [pairs[1] for pairs in data_raw.a]
