@@ -1,7 +1,7 @@
 from datetime import datetime
 from os import times
 from time import time
-from typing import Generator, List, Optional, Tuple, final
+from typing import Dict, Generator, List, Optional, Tuple, final
 from infi.clickhouse_orm.database import Database
 from infi.clickhouse_orm.funcs import F
 from model import DiffDepthStream, DepthSnapshot
@@ -99,12 +99,8 @@ def orderbook_generator(
         ):
             raise ValueError()
 
-        diff_bids_book = lists_to_dict(diff_bids_price, diff_bids_quantity)
-        diff_asks_book = lists_to_dict(diff_asks_price, diff_asks_quantity)
-        bids_book.update(diff_bids_book)
-        asks_book.update(diff_asks_book)
-        bids_book = dict_filter_zeros(bids_book)
-        asks_book = dict_filter_zeros(asks_book)
+        update_book(bids_book, diff_bids_price, diff_bids_quantity)
+        update_book(asks_book, diff_asks_price, diff_asks_quantity)
 
         yield (timestamp, final_update_id, bids_book.copy(), asks_book.copy(), symbol)
 
@@ -117,9 +113,18 @@ def dict_filter_zeros(book):
     return {p: q for p, q in book.items() if q != 0}
 
 
+def update_book(book: Dict, price, quantity):
+    for p, q in zip(price, quantity):
+        if q == 0:
+            book.pop(p, 0)
+        else:
+            book[p] = q
+
+
 if __name__ == "__main__":
     i = 0
     first_id = last_id = 0
     for r in orderbook_generator("archive", 7505673970, "ETHUSDT"):
-        last_id = r[1]
-    print(last_id)
+        i += 1
+    print(r[2])
+    print(i)
