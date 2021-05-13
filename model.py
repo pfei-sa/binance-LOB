@@ -10,7 +10,7 @@ from infi.clickhouse_orm.fields import (
     UInt64Field,
 )
 from infi.clickhouse_orm.database import Database, DatabaseException
-from infi.clickhouse_orm.engines import MergeTree
+from infi.clickhouse_orm.engines import MergeTree, ReplacingMergeTree
 from infi.clickhouse_orm.funcs import F
 from enum import IntEnum
 from config import Config
@@ -90,7 +90,7 @@ class DiffDepthStream(Model):
     asks_price = ArrayField(Float64Field())
     symbol = StringField()
 
-    engine = MergeTree(
+    engine = ReplacingMergeTree(
         partition_key=(F.toYYYYMM(timestamp), "symbol"),
         order_by=("timestamp", "first_update_id", "final_update_id"),
     )
