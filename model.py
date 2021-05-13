@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from infi.clickhouse_orm.models import Model
 from infi.clickhouse_orm.fields import (
     ArrayField,
@@ -46,8 +46,15 @@ class Logger:
     def __init__(self, database: Database):
         self.db = database
 
-    def log_msg(self, msg: str, level: LoggingLevel, payload: str = "") -> None:
-        if CONFIG.log_to_console:
+    def log_msg(
+        self,
+        msg: str,
+        level: LoggingLevel,
+        payload: str = "",
+        silence: Optional[bool] = None,
+    ) -> None:
+        silence = silence if silence is not None else CONFIG.log_to_console
+        if silence:
             logging.log(level, msg)
         self.db.insert(
             [
@@ -90,10 +97,11 @@ class DiffDepthStream(Model):
 
 
 class DiffDepthStreamDispatcher:
-    def __init__(self, database: Database):
+    def __init__(self, database: Database, logger: Logger):
         self.buffer = []
         self.db = database
         self.batch_size = CONFIG.dispatcher_buffer_size
+        self.logger = logger
 
     def insert(
         self,
@@ -126,7 +134,9 @@ class DiffDepthStreamDispatcher:
             self.db.insert(self.buffer)
             self.buffer = []
         except DatabaseException as e:
-            print(e)
+            self.logger.log_msg(
+                f"{self.__repr__()} error, retrying:", LoggingLevel.WARNING, repr(e)
+            )
 
     def __len__(self):
         return len(self.buffer)

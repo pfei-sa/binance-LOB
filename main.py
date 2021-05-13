@@ -119,8 +119,8 @@ async def setup():
     session = aiohttp.ClientSession()
     loop = asyncio.get_event_loop()
     database = Database(CONFIG.db_name)
-    dispatcher = DiffDepthStreamDispatcher(database)
     logger = Logger(database)
+    dispatcher = DiffDepthStreamDispatcher(database, logger)
     for symbol in CONFIG.symbols:
         loop.create_task(
             handle_depth_stream(symbol, session, dispatcher, database, logger, loop)
