@@ -112,7 +112,7 @@ async def handle_depth_stream(
             LoggingLevel.INFO,
             symbol,
         )
-        next_full_fetch = time
+        next_full_fetch = time()
 
 
 async def setup():
