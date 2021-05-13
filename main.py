@@ -8,10 +8,7 @@ import asyncio
 import aiohttp
 from pydantic import BaseModel, ValidationError
 from time import time
-from config import Config
-
-
-CONFIG = Config()
+from config import CONFIG
 
 
 class DiffDepthStreamMsg(BaseModel):

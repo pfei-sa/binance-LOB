@@ -13,10 +13,9 @@ from infi.clickhouse_orm.database import Database, DatabaseException
 from infi.clickhouse_orm.engines import MergeTree, ReplacingMergeTree
 from infi.clickhouse_orm.funcs import F
 from enum import IntEnum
-from config import Config
+from config import CONFIG
 import logging
 
-CONFIG = Config()
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(message)s",
     datefmt="%m/%d/%Y %I:%M:%S %p",
