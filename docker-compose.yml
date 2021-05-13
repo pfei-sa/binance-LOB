@@ -9,4 +9,5 @@ services:
                 hard: 262144
         ports:
             - "8123:8123"
+            - "9000:9000"
         restart: always
