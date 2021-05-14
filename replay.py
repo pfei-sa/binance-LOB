@@ -40,7 +40,9 @@ def diff_depth_stream_generator(
 
 def orderbook_generator(
     last_update_id: int, symbol: str, block_size: Optional[int] = None
-) -> Generator[Tuple[datetime, int, Dict[float, float], Dict[float, float], str], None, None]:
+) -> Generator[
+    Tuple[datetime, int, Dict[float, float], Dict[float, float], str], None, None
+]:
     database = CONFIG.db_name
     db = Database(CONFIG.db_name, db_url=f"http://{CONFIG.host_name}:8123/")
     client = Client(host=CONFIG.host_name)
@@ -105,7 +107,11 @@ def orderbook_generator(
 
 
 def partial_orderbook_generator(
-    last_update_id: int, symbol: str, level: int = 10, block_size: Optional[int] = None
+    last_update_id: int,
+    symbol: str,
+    level: int = 10,
+    block_size: Optional[int] = None,
+    level_multiplier: int = 30,
 ) -> Generator[Tuple[datetime, int, List[float], str], None, None]:
     database = CONFIG.db_name
     db = Database(CONFIG.db_name)
@@ -186,8 +192,8 @@ def partial_orderbook_generator(
         update_book(bids_book, diff_bids_price, diff_bids_quantity)
         update_book(asks_book, diff_asks_price, diff_asks_quantity)
 
-        bids_levels = heapq.nlargest(level * 30, bids_book.keys())
-        asks_levels = heapq.nsmallest(level * 30, asks_book.keys())
+        bids_levels = heapq.nlargest(level * level_multiplier, bids_book.keys())
+        asks_levels = heapq.nsmallest(level * level_multiplier, asks_book.keys())
 
         bids_book = {p: bids_book[p] for p in bids_levels}
         asks_book = {p: asks_book[p] for p in asks_levels}
