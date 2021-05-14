@@ -39,7 +39,10 @@ def diff_depth_stream_generator(
 
 
 def orderbook_generator(
-    last_update_id: int, symbol: str, block_size: Optional[int] = None
+    last_update_id: int,
+    symbol: str,
+    block_size: Optional[int] = None,
+    return_copy: bool = True,
 ) -> Generator[
     Tuple[datetime, int, Dict[float, float], Dict[float, float], str], None, None
 ]:
@@ -61,6 +64,9 @@ def orderbook_generator(
         symbol (str): symbol for orderbook to reconstruct
         block_size (Optional[int], optional): pagniate size for executing SQL queries. None
             means all data are retrived at once. Defaults to None.
+        return_copy (bool, optional): whether a copy of local orderbook is made when yield. Set to
+            false if orderbook yielded is used in a read only manner or local orderbook might be
+            corrupted, and could speedup the generator significantly. Defaults to true.
 
     Raises:
         ValueError: ignore
@@ -105,7 +111,11 @@ def orderbook_generator(
     bids_book = lists_to_dict(bids_price, bids_quantity)
     asks_book = lists_to_dict(asks_price, asks_quantity)
 
-    yield (timestamp, last_update_id, bids_book.copy(), asks_book.copy(), symbol)
+    if return_copy:
+        yield (timestamp, last_update_id, bids_book.copy(), asks_book.copy(), symbol)
+    else:
+        yield (timestamp, last_update_id, bids_book, asks_book, symbol)
+
     prev_final_update_id = None
     for diff_stream in diff_depth_stream_generator(last_update_id, symbol, block_size):
         # https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
@@ -135,7 +145,10 @@ def orderbook_generator(
         update_book(bids_book, diff_bids_price, diff_bids_quantity)
         update_book(asks_book, diff_asks_price, diff_asks_quantity)
 
-        yield (timestamp, final_update_id, bids_book.copy(), asks_book.copy(), symbol)
+        if return_copy:
+            yield (timestamp, final_update_id, bids_book.copy(), asks_book.copy(), symbol)
+        else:
+            yield (timestamp, final_update_id, bids_book, asks_book, symbol)
 
 
 def partial_orderbook_generator(
