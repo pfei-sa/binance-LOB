@@ -43,6 +43,38 @@ def orderbook_generator(
 ) -> Generator[
     Tuple[datetime, int, Dict[float, float], Dict[float, float], str], None, None
 ]:
+    """Generator to iterate reconstructed full orderbook from diff stream where
+    each element yielded are orderbook constructed from each stream update. The iterator
+    is exhausted when there is a gap in the diff depth stream (probably due to connection lost
+    while logging data), i.e. the previous final_update_id + 1 != first_update_id, or there is no
+    more diff stream in the database. Last recieved last_update_id can be used again to create new
+    generator to construct future orderbooks.
+
+    Args:
+        last_update_id (int): target update id to begin iterator. The first item
+            from the iterator will be the first snapshot with last update id that
+            is strictly greater than the one applied. Sucessive item will be constructed
+            with diff stream while a local orderbook is maintained.
+            See the link below for detail
+            https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
+            for more detail.
+        symbol (str): symbol for orderbook to reconstruct
+        block_size (Optional[int], optional): pagniate size for executing SQL queries. None
+            means all data are retrived at once. Defaults to None.
+
+    Raises:
+        ValueError: ignore
+
+    Yields:
+        Generator[ Tuple[datetime, int, Dict[float, float], Dict[float, float], str], None, None ]:
+            A tuple with reconstructed orderbook. Where:
+            tuple[0] is the timestamp for orderbook
+            tuple[1] is the last update id
+            tuple[2] is the bids book
+            tuple[3] is the asks book
+                Both orderbook are returnd as dictionary mapping from price to quantity
+            tuple[4] is the symbol
+    """
     database = CONFIG.db_name
     db = Database(CONFIG.db_name, db_url=f"http://{CONFIG.host_name}:8123/")
     client = Client(host=CONFIG.host_name)
@@ -113,6 +145,41 @@ def partial_orderbook_generator(
     block_size: Optional[int] = None,
     level_multiplier: int = 30,
 ) -> Generator[Tuple[datetime, int, List[float], str], None, None]:
+    """Similar to orderbook_generator but instead of yielding a full constructed orderbook
+    while maintaining a full local orderbook, a partial orderbook with level for both bids and
+    asks are yielded and only a partial orderbook is maintained. This generator should be much
+    faster than orderbook_generator.
+
+    Args:
+        last_update_id (int): target update id to begin iterator. The first item
+            from the iterator will be the first snapshot with last update id that
+            is strictly greater than the one applied. Sucessive item will be constructed
+            with diff stream while a local orderbook is maintained.
+            See the link below for detail
+            https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
+            for more detail.
+        symbol (str): symbol for orderbook to reconstruct
+        level (int, optional): levels of orderbook to return. Defaults to 10.
+        block_size (Optional[int], optional): pagniate size for executing SQL queries. None
+            means all data are retrived at once. Defaults to None.
+        level_multiplier (int, optional): level multiplier for local orderbook to maintain.
+            i.e. a multiplier of 30 with level of 10 means a orderbook depth of 300 is maintained
+            locally. A lower number might result in inaccurate orderbook reconstruction.
+            Defaults to 30.
+
+    Raises:
+        ValueError: ignore
+
+    Yields:
+        Generator[Tuple[datetime, int, List[float], str], None, None]:
+            A tuple with reconstructed orderbook. Where:
+            tuple[0] is the timestamp for orderbook
+            tuple[1] is the last update id
+            tuple[2] is the result orderbook in the folloing format
+                [bid_1_price, bid_1_qty, ask_1_price, ask_1_qty, bid_2_price,..., ask_n_qty]
+                where n is the level supplied
+            tuple[3] is the symbol
+    """
     database = CONFIG.db_name
     db = Database(CONFIG.db_name)
     client = Client(host=CONFIG.host_name)
@@ -249,7 +316,7 @@ if __name__ == "__main__":
     first_id = last_id = 0
     for r in tqdm(partial_orderbook_generator(0, "ETHUSDT")):
         i += 1
-        if i >= 1_000:
+        if r[1] >= 7494682003:
             break
     print(i)
     print(r)
