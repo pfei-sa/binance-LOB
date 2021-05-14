@@ -6,7 +6,6 @@ from clickhouse_driver import Client
 from config import CONFIG
 from tqdm import tqdm
 import heapq
-from cachetools.lru import LRUCache
 
 
 def diff_depth_stream_generator(
