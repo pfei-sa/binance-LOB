@@ -13,7 +13,7 @@ To start data collection, make sure `docker` and `docker-compose` is install on 
 
 #### Config file
 Modify config.json to control the behavior of the data collection process:
-```json
+```jsonc
 {
     // symbols to track
     "symbols": [
