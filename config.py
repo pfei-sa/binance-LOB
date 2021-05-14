@@ -31,7 +31,7 @@ class Config(BaseSettings):
     host_name_default: str = "localhost"
 
     @property
-    def host_name(self):
+    def host_name(self) -> str:
         if os.environ.get('AM_I_IN_DOCKER', False):
             return self.host_name_docker
         else:

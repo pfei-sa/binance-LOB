@@ -25,7 +25,7 @@ def diff_depth_stream_generator(
             DiffDepthStream.symbol == symbol.upper(),
             DiffDepthStream.final_update_id >= last_update_id,
         )
-        .order_by("final_update_id")
+        .order_by("timestamp")
     )
 
     if block_size is None:
@@ -40,7 +40,7 @@ def diff_depth_stream_generator(
 
 def orderbook_generator(
     last_update_id: int, symbol: str, block_size: Optional[int] = None
-):
+) -> Generator[Tuple[datetime, int, Dict[float, float], Dict[float, float], str], None, None]:
     database = CONFIG.db_name
     db = Database(CONFIG.db_name, db_url=f"http://{CONFIG.host_name}:8123/")
     client = Client(host=CONFIG.host_name)
@@ -51,7 +51,7 @@ def orderbook_generator(
             DepthSnapshot.symbol == symbol.upper(),
             DepthSnapshot.last_update_id > last_update_id,
         )
-    ).order_by(last_update_id)
+    ).order_by("timestamp")
 
     result = client.execute(qs.as_sql())
     if len(result) == 0:
@@ -106,7 +106,7 @@ def orderbook_generator(
 
 def partial_orderbook_generator(
     last_update_id: int, symbol: str, level: int = 10, block_size: Optional[int] = None
-):
+) -> Generator[Tuple[datetime, int, List[float], str], None, None]:
     database = CONFIG.db_name
     db = Database(CONFIG.db_name)
     client = Client(host=CONFIG.host_name)
@@ -117,7 +117,7 @@ def partial_orderbook_generator(
             DepthSnapshot.symbol == symbol.upper(),
             DepthSnapshot.last_update_id > last_update_id,
         )
-    ).order_by(last_update_id)
+    ).order_by("timestamp")
 
     result = client.execute(qs.as_sql())
     if len(result) == 0:
@@ -214,11 +214,13 @@ def partial_orderbook_generator(
         yield (timestamp, final_update_id, result, symbol)
 
 
-def lists_to_dict(price, quantity):
+def lists_to_dict(price: List[float], quantity: List[float]) -> Dict[float, float]:
     return {p: q for p, q in zip(price, quantity)}
 
 
-def update_book(book: Dict, price, quantity):
+def update_book(
+    book: Dict[float, float], price: List[float], quantity: List[float]
+) -> None:
     for p, q in zip(price, quantity):
         if q == 0:
             book.pop(p, 0)
@@ -226,20 +228,23 @@ def update_book(book: Dict, price, quantity):
             book[p] = q
 
 
-def get_snapshots_update_ids(symbol: str) -> int:
+def get_snapshots_update_ids(symbol: str) -> List[int]:
     database = CONFIG.db_name
     client = Client(host=CONFIG.host_name)
     client.execute(f"USE {database}")
     return client.execute(
-        f"SELECT last_update_id FROM depthsnapshot WHERE symbol = '{symbol.upper()}'"
+        f"SELECT last_update_id FROM depthsnapshot WHERE symbol = '{symbol.upper()}' ORDER BY "
+        "timestamp"
     )
 
 
 if __name__ == "__main__":
     i = 0
     first_id = last_id = 0
-    for r in tqdm(partial_orderbook_generator(7492611294, "ETHUSDT")):
+    for r in tqdm(partial_orderbook_generator(0, "ETHUSDT")):
         i += 1
-        if i >= 100_000:
+        if i >= 1_000:
             break
+    print(i)
     print(r)
+    print(get_snapshots_update_ids("ETHUSDT"))

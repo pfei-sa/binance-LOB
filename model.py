@@ -112,7 +112,7 @@ class DiffDepthStreamDispatcher:
         asks_quantity: List[float],
         asks_price: List[float],
         symbol: str,
-    ):
+    ) -> None:
         self.buffer.append(
             DiffDepthStream(
                 timestamp=timestamp,
@@ -128,7 +128,7 @@ class DiffDepthStreamDispatcher:
         if len(self.buffer) >= self.batch_size:
             self.insert_to_db()
 
-    def insert_to_db(self):
+    def insert_to_db(self) -> None:
         try:
             self.db.insert(self.buffer)
             self.buffer = []
@@ -137,7 +137,7 @@ class DiffDepthStreamDispatcher:
                 f"{self.__repr__()} error, retrying:", LoggingLevel.WARNING, repr(e)
             )
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.buffer)
 
     def __repr__(self) -> str:
