@@ -125,6 +125,7 @@ async def setup():
     database = Database(CONFIG.db_name, db_url=f"http://{CONFIG.host_name}:8123/")
     logger = Logger(database)
     dispatcher = DiffDepthStreamDispatcher(database, logger)
+    logger.log_msg("Starting event loop...", LoggingLevel.INFO)
     for symbol in CONFIG.symbols:
         loop.create_task(
             handle_depth_stream(symbol, session, dispatcher, database, logger, loop)
