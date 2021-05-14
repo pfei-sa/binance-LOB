@@ -134,3 +134,4 @@ test.json
 .vscode/
 .idea/
 database/*
+binance_broker_api_v1.postman_collection.json
