@@ -145,6 +145,6 @@ class DiffDepthStreamDispatcher:
 
 
 if __name__ == "__main__":
-    db = Database(CONFIG.db_name)
+    db = Database(CONFIG.db_name, db_url=f"http://{CONFIG.host_name}:8123/")
     for model in [LoggingMsg, DepthSnapshot, DiffDepthStream]:
         db.create_table(model)

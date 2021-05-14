@@ -11,3 +11,10 @@ services:
             - "8123:8123"
             - "9000:9000"
         restart: always
+    main:
+        build: .
+        restart: always
+        depends_on:
+            - "clickhouse"
+        links: 
+            - "clickhouse"

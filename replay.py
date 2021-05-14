@@ -16,8 +16,8 @@ def diff_depth_stream_generator(
     None,
 ]:
     database = CONFIG.db_name
-    db = Database(database)
-    client = Client(host="localhost")
+    db = Database(CONFIG.db_name, db_url=f"http://{CONFIG.host_name}:8123/")
+    client = Client(host=CONFIG.host_name)
     client.execute(f"USE {database}")
     qs = (
         DiffDepthStream.objects_in(db)
@@ -42,8 +42,8 @@ def orderbook_generator(
     last_update_id: int, symbol: str, block_size: Optional[int] = None
 ):
     database = CONFIG.db_name
-    db = Database(database)
-    client = Client(host="localhost")
+    db = Database(CONFIG.db_name, db_url=f"http://{CONFIG.host_name}:8123/")
+    client = Client(host=CONFIG.host_name)
     client.execute(f"USE {database}")
 
     qs = (
@@ -108,8 +108,8 @@ def partial_orderbook_generator(
     last_update_id: int, symbol: str, level: int = 10, block_size: Optional[int] = None
 ):
     database = CONFIG.db_name
-    db = Database(database)
-    client = Client(host="localhost")
+    db = Database(CONFIG.db_name)
+    client = Client(host=CONFIG.host_name)
     client.execute(f"USE {database}")
 
     qs = (
@@ -228,7 +228,7 @@ def update_book(book: Dict, price, quantity):
 
 def get_snapshots_update_ids(symbol: str) -> int:
     database = CONFIG.db_name
-    client = Client(host="localhost")
+    client = Client(host=CONFIG.host_name)
     client.execute(f"USE {database}")
     return client.execute(
         f"SELECT last_update_id FROM depthsnapshot WHERE symbol = '{symbol.upper()}'"

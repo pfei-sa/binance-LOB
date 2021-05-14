@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from typing import Dict, Any, List
-
+import os
 from pydantic import BaseSettings
 
 
@@ -27,6 +27,15 @@ class Config(BaseSettings):
     log_to_console: bool = True
     dispatcher_buffer_size: int = 1000
     db_name: str = "archive"
+    host_name_docker: str = "clickhouse"
+    host_name_default: str = "localhost"
+
+    @property
+    def host_name(self):
+        if os.environ.get('AM_I_IN_DOCKER', False):
+            return self.host_name_docker
+        else:
+            return self.host_name_default
 
     class Config:
         env_file_encoding = "utf-8"

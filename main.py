@@ -2,7 +2,14 @@ from asyncio.events import AbstractEventLoop
 from typing import List
 from aiohttp.client import ClientSession
 from infi.clickhouse_orm.database import Database
-from model import DepthSnapshot, DiffDepthStreamDispatcher, Logger, LoggingLevel, DiffDepthStream, LoggingMsg
+from model import (
+    DepthSnapshot,
+    DiffDepthStreamDispatcher,
+    Logger,
+    LoggingLevel,
+    DiffDepthStream,
+    LoggingMsg,
+)
 from datetime import datetime
 import asyncio
 import aiohttp
@@ -115,7 +122,7 @@ async def handle_depth_stream(
 async def setup():
     session = aiohttp.ClientSession()
     loop = asyncio.get_event_loop()
-    database = Database(CONFIG.db_name)
+    database = Database(CONFIG.db_name, db_url=f"http://{CONFIG.host_name}:8123/")
     logger = Logger(database)
     dispatcher = DiffDepthStreamDispatcher(database, logger)
     for symbol in CONFIG.symbols:
@@ -125,7 +132,7 @@ async def setup():
 
 
 if __name__ == "__main__":
-    db = Database(CONFIG.db_name)
+    db = Database(CONFIG.db_name, db_url=f"http://{CONFIG.host_name}:8123/")
     for model in [LoggingMsg, DepthSnapshot, DiffDepthStream]:
         db.create_table(model)
     loop = asyncio.get_event_loop()
