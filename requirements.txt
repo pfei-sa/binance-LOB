@@ -1,4 +1,6 @@
-infi.clickhouse_orm==2.1.0
 pydantic==1.8.2
+tqdm==4.51.0
+infi.clickhouse_orm==2.1.0
+clickhouse_driver==0.2.0
 aiohttp==3.7.4.post0
 infi==0.0.1
