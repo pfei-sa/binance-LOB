@@ -71,6 +71,6 @@ for r in orderbook_generator(0, "ETHUSDT", block_size=5000):
     #process yor orderbook
 ```
 
-The generator when there is a gap in the diff depth stream  (probably due to connection lost while logging data), i.e. the previous `final_update_id + 1 != first_update_id`, or there is no more diff stream in the database. To skip the gap and start a new generator, simply use the last `last_update_id` from previus iteration again.
+The generator is exhausted when there is a gap in the diff depth stream  (probably due to connection lost while logging data), i.e. the previous `final_update_id + 1 != first_update_id`, or there is no more diff stream in the database. To skip the gap and start a new generator, simply use the last `last_update_id` from previus iteration again.
 
 See docstring for both function for more detail.
