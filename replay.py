@@ -157,8 +157,7 @@ def partial_orderbook_generator(
     last_update_id: int,
     symbol: str,
     level: int = 10,
-    block_size: Optional[int] = 5_000,
-    level_multiplier: int = 30,
+    block_size: Optional[int] = 5_000
 ) -> Generator[Tuple[datetime, int, List[float], str], None, None]:
     """Similar to orderbook_generator but instead of yielding a full constructed orderbook
     while maintaining a full local orderbook, a partial orderbook with level for both bids and
@@ -177,10 +176,6 @@ def partial_orderbook_generator(
         level (int, optional): levels of orderbook to return. Defaults to 10.
         block_size (Optional[int], optional): pagniate size for executing SQL queries. None
             means all data are retrived at once. Defaults to 5000.
-        level_multiplier (int, optional): level multiplier for local orderbook to maintain.
-            i.e. a multiplier of 30 with level of 10 means a orderbook depth of 300 is maintained
-            locally. A lower number might result in inaccurate orderbook reconstruction.
-            Defaults to 30.
 
     Raises:
         ValueError: ignore
@@ -309,7 +304,7 @@ def get_snapshots_update_ids(symbol: str) -> List[int]:
 if __name__ == "__main__":
     i = 0
     first_id = last_id = 0
-    for r in tqdm(partial_orderbook_generator(0, "ETHUSDT", block_size=5_000)):
+    for r in tqdm(orderbook_generator(0, "ETHUSDT", block_size=5_000)):
         i += 1
         if r[1] >= 7494682003:
             break
