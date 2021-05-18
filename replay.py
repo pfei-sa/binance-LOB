@@ -7,7 +7,6 @@ from config import CONFIG
 from sortedcontainers import SortedDict
 from tqdm import tqdm
 from itertools import chain
-import heapq
 
 
 def diff_depth_stream_generator(
@@ -148,16 +147,19 @@ def orderbook_generator(
         update_book(asks_book, diff_asks_price, diff_asks_quantity)
 
         if return_copy:
-            yield (timestamp, final_update_id, bids_book.copy(), asks_book.copy(), symbol)
+            yield (
+                timestamp,
+                final_update_id,
+                bids_book.copy(),
+                asks_book.copy(),
+                symbol,
+            )
         else:
             yield (timestamp, final_update_id, bids_book, asks_book, symbol)
 
 
 def partial_orderbook_generator(
-    last_update_id: int,
-    symbol: str,
-    level: int = 10,
-    block_size: Optional[int] = 5_000
+    last_update_id: int, symbol: str, level: int = 10, block_size: Optional[int] = 5_000
 ) -> Generator[Tuple[datetime, int, List[float], str], None, None]:
     """Similar to orderbook_generator but instead of yielding a full constructed orderbook
     while maintaining a full local orderbook, a partial orderbook with level for both bids and
@@ -224,12 +226,7 @@ def partial_orderbook_generator(
     asks_items = asks_book.items()[:level]
 
     result = [
-        val
-        for (bids, asks) in zip(
-            bids_items,
-            asks_items
-        )
-        for val in chain(bids, asks)
+        val for (bids, asks) in zip(bids_items, asks_items) for val in chain(bids, asks)
     ]
 
     yield (timestamp, last_update_id, result, symbol)
@@ -267,10 +264,7 @@ def partial_orderbook_generator(
 
         result = [
             val
-            for (bids, asks) in zip(
-                bids_items,
-                asks_items
-            )
+            for (bids, asks) in zip(bids_items, asks_items)
             for val in chain(bids, asks)
         ]
 
