@@ -94,10 +94,11 @@ def orderbook_generator(
         )
     ).order_by("timestamp")
 
-    result = client.execute(qs.as_sql())
-    if len(result) == 0:
+    sql_result = client.execute(qs.as_sql())
+    if len(sql_result) == 0:
         return
-    snapshot = result[0]
+    snapshot = sql_result.pop(0)
+    next_snapshot = sql_result.pop(0) if sql_result else None
     client.disconnect()
     (
         timestamp,
@@ -142,6 +143,26 @@ def orderbook_generator(
             last_update_id + 1 < first_update_id or last_update_id + 1 > final_update_id
         ):
             raise ValueError()
+
+        if next_snapshot is not None and (
+            first_update_id <= next_snapshot[1] + 1 <= final_update_id
+        ):
+            (
+                _,
+                _,
+                bids_quantity,
+                bids_price,
+                asks_quantity,
+                asks_price,
+                _,
+            ) = next_snapshot
+
+            bids_book.clear()
+            asks_book.clear()
+            bids_book.update(zip(bids_price, bids_quantity))
+            asks_book.update(zip(asks_price, asks_quantity))
+
+            next_snapshot = sql_result.pop(0) if sql_result else None
 
         update_book(bids_book, diff_bids_price, diff_bids_quantity)
         update_book(asks_book, diff_asks_price, diff_asks_quantity)
@@ -204,11 +225,11 @@ def partial_orderbook_generator(
         )
     ).order_by("timestamp")
 
-    result = client.execute(qs.as_sql())
-    if len(result) == 0:
+    sql_result = client.execute(qs.as_sql())
+    if len(sql_result) == 0:
         return
-    snapshot = result.pop(0)
-    next_snapshot = result.pop(0) if result else None
+    snapshot = sql_result.pop(0)
+    next_snapshot = sql_result.pop(0) if sql_result else None
     client.disconnect()
     (
         timestamp,
@@ -276,7 +297,7 @@ def partial_orderbook_generator(
             bids_book.update(zip(bids_price, bids_quantity))
             asks_book.update(zip(asks_price, asks_quantity))
 
-            next_snapshot = result.pop(0) if result else None
+            next_snapshot = sql_result.pop(0) if sql_result else None
 
         update_book(bids_book, diff_bids_price, diff_bids_quantity)
         update_book(asks_book, diff_asks_price, diff_asks_quantity)
