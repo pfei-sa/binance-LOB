@@ -4,8 +4,9 @@ from infi.clickhouse_orm.database import Database
 from model import DiffDepthStream, DepthSnapshot
 from clickhouse_driver import Client
 from config import CONFIG
+from sortedcontainers import SortedDict
 from tqdm import tqdm
-import heapq
+from itertools import chain
 
 
 def diff_depth_stream_generator(
@@ -41,7 +42,7 @@ def diff_depth_stream_generator(
 def orderbook_generator(
     last_update_id: int,
     symbol: str,
-    block_size: Optional[int] = None,
+    block_size: Optional[int] = 5_000,
     return_copy: bool = True,
 ) -> Generator[
     Tuple[datetime, int, Dict[float, float], Dict[float, float], str], None, None
@@ -63,7 +64,7 @@ def orderbook_generator(
             for more detail.
         symbol (str): symbol for orderbook to reconstruct
         block_size (Optional[int], optional): pagniate size for executing SQL queries. None
-            means all data are retrived at once. Defaults to None.
+            means all data are retrived at once. Defaults to 5000.
         return_copy (bool, optional): whether a copy of local orderbook is made when yield. Set to
             false if orderbook yielded is used in a read only manner or local orderbook might be
             corrupted, and could speedup the generator significantly. Defaults to true.
@@ -93,10 +94,11 @@ def orderbook_generator(
         )
     ).order_by("timestamp")
 
-    result = client.execute(qs.as_sql())
-    if len(result) == 0:
+    sql_result = client.execute(qs.as_sql())
+    if len(sql_result) == 0:
         return
-    snapshot = result[0]
+    snapshot = sql_result.pop(0)
+    next_snapshot = sql_result.pop(0) if sql_result else None
     client.disconnect()
     (
         timestamp,
@@ -142,21 +144,43 @@ def orderbook_generator(
         ):
             raise ValueError()
 
+        if next_snapshot is not None and (
+            first_update_id <= next_snapshot[1] + 1 <= final_update_id
+        ):
+            (
+                _,
+                _,
+                bids_quantity,
+                bids_price,
+                asks_quantity,
+                asks_price,
+                _,
+            ) = next_snapshot
+
+            bids_book.clear()
+            asks_book.clear()
+            bids_book.update(zip(bids_price, bids_quantity))
+            asks_book.update(zip(asks_price, asks_quantity))
+
+            next_snapshot = sql_result.pop(0) if sql_result else None
+
         update_book(bids_book, diff_bids_price, diff_bids_quantity)
         update_book(asks_book, diff_asks_price, diff_asks_quantity)
 
         if return_copy:
-            yield (timestamp, final_update_id, bids_book.copy(), asks_book.copy(), symbol)
+            yield (
+                timestamp,
+                final_update_id,
+                bids_book.copy(),
+                asks_book.copy(),
+                symbol,
+            )
         else:
             yield (timestamp, final_update_id, bids_book, asks_book, symbol)
 
 
 def partial_orderbook_generator(
-    last_update_id: int,
-    symbol: str,
-    level: int = 10,
-    block_size: Optional[int] = None,
-    level_multiplier: int = 30,
+    last_update_id: int, symbol: str, level: int = 10, block_size: Optional[int] = 5_000
 ) -> Generator[Tuple[datetime, int, List[float], str], None, None]:
     """Similar to orderbook_generator but instead of yielding a full constructed orderbook
     while maintaining a full local orderbook, a partial orderbook with level for both bids and
@@ -174,11 +198,7 @@ def partial_orderbook_generator(
         symbol (str): symbol for orderbook to reconstruct
         level (int, optional): levels of orderbook to return. Defaults to 10.
         block_size (Optional[int], optional): pagniate size for executing SQL queries. None
-            means all data are retrived at once. Defaults to None.
-        level_multiplier (int, optional): level multiplier for local orderbook to maintain.
-            i.e. a multiplier of 30 with level of 10 means a orderbook depth of 300 is maintained
-            locally. A lower number might result in inaccurate orderbook reconstruction.
-            Defaults to 30.
+            means all data are retrived at once. Defaults to 5000.
 
     Raises:
         ValueError: ignore
@@ -205,10 +225,11 @@ def partial_orderbook_generator(
         )
     ).order_by("timestamp")
 
-    result = client.execute(qs.as_sql())
-    if len(result) == 0:
+    sql_result = client.execute(qs.as_sql())
+    if len(sql_result) == 0:
         return
-    snapshot = result[0]
+    snapshot = sql_result.pop(0)
+    next_snapshot = sql_result.pop(0) if sql_result else None
     client.disconnect()
     (
         timestamp,
@@ -220,26 +241,14 @@ def partial_orderbook_generator(
         _,
     ) = snapshot
 
-    bids_book = lists_to_dict(bids_price, bids_quantity)
-    asks_book = lists_to_dict(asks_price, asks_quantity)
+    bids_book = SortedDict(lambda x: -x, lists_to_dict(bids_price, bids_quantity))
+    asks_book = SortedDict(lists_to_dict(asks_price, asks_quantity))
 
-    bids_levels = heapq.nlargest(level, bids_book.keys())
-    asks_levels = heapq.nsmallest(level, asks_book.keys())
-
-    bids_levels.sort(reverse=True)
-    asks_levels.sort()
+    bids_items = bids_book.items()[:level]
+    asks_items = asks_book.items()[:level]
 
     result = [
-        val
-        for tup in zip(
-            *[
-                bids_levels,
-                [bids_book[p] for p in bids_levels],
-                asks_levels,
-                [asks_book[p] for p in asks_levels],
-            ]
-        )
-        for val in tup
+        val for (bids, asks) in zip(bids_items, asks_items) for val in chain(bids, asks)
     ]
 
     yield (timestamp, last_update_id, result, symbol)
@@ -262,6 +271,7 @@ def partial_orderbook_generator(
             and prev_final_update_id + 1 != first_update_id
         ):
             return
+
         prev_final_update_id = final_update_id
 
         if prev_final_update_id is None and (
@@ -269,32 +279,36 @@ def partial_orderbook_generator(
         ):
             raise ValueError()
 
+        if next_snapshot is not None and (
+            first_update_id <= next_snapshot[1] + 1 <= final_update_id
+        ):
+            (
+                _,
+                _,
+                bids_quantity,
+                bids_price,
+                asks_quantity,
+                asks_price,
+                _,
+            ) = next_snapshot
+
+            bids_book.clear()
+            asks_book.clear()
+            bids_book.update(zip(bids_price, bids_quantity))
+            asks_book.update(zip(asks_price, asks_quantity))
+
+            next_snapshot = sql_result.pop(0) if sql_result else None
+
         update_book(bids_book, diff_bids_price, diff_bids_quantity)
         update_book(asks_book, diff_asks_price, diff_asks_quantity)
 
-        bids_levels = heapq.nlargest(level * level_multiplier, bids_book.keys())
-        asks_levels = heapq.nsmallest(level * level_multiplier, asks_book.keys())
-
-        bids_book = {p: bids_book[p] for p in bids_levels}
-        asks_book = {p: asks_book[p] for p in asks_levels}
-
-        bids_levels = heapq.nlargest(level, bids_levels)
-        asks_levels = heapq.nsmallest(level, asks_levels)
-
-        bids_levels.sort(reverse=True)
-        asks_levels.sort()
+        bids_items = bids_book.items()[:level]
+        asks_items = asks_book.items()[:level]
 
         result = [
             val
-            for tup in zip(
-                *[
-                    bids_levels,
-                    [bids_book[p] for p in bids_levels],
-                    asks_levels,
-                    [asks_book[p] for p in asks_levels],
-                ]
-            )
-            for val in tup
+            for (bids, asks) in zip(bids_items, asks_items)
+            for val in chain(bids, asks)
         ]
 
         yield (timestamp, final_update_id, result, symbol)
@@ -327,7 +341,7 @@ def get_snapshots_update_ids(symbol: str) -> List[int]:
 if __name__ == "__main__":
     i = 0
     first_id = last_id = 0
-    for r in tqdm(partial_orderbook_generator(0, "ETHUSDT")):
+    for r in tqdm(orderbook_generator(0, "ETHUSDT", block_size=5_000)):
         i += 1
         if r[1] >= 7494682003:
             break
