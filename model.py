@@ -8,6 +8,7 @@ from infi.clickhouse_orm.fields import (
     UInt8Field,
     Float64Field,
     UInt64Field,
+    LowCardinalityField,
 )
 from infi.clickhouse_orm.database import Database, DatabaseException
 from infi.clickhouse_orm.engines import MergeTree, ReplacingMergeTree
@@ -30,15 +31,6 @@ class LoggingLevel(IntEnum):
     INFO = 20
     DEBUG = 10
     NOTSET = 0
-
-
-class LoggingMsg(Model):
-    timestamp = DateTime64Field(codec="Delta,ZSTD")
-    msg = StringField()
-    level = UInt8Field(codec="Delta, LZ4")
-    payload = StringField(default="")
-
-    engine = MergeTree("timestamp", order_by=("timestamp",))
 
 
 class Logger:
@@ -64,6 +56,15 @@ class Logger:
         )
 
 
+class LoggingMsg(Model):
+    timestamp = DateTime64Field(codec="Delta,ZSTD")
+    msg = StringField()
+    level = UInt8Field(codec="Delta, LZ4")
+    payload = StringField(default="")
+
+    engine = MergeTree("timestamp", order_by=("timestamp",))
+
+
 class DepthSnapshot(Model):
     timestamp = DateTime64Field(codec="Delta,ZSTD")
     last_update_id = UInt64Field()
@@ -71,7 +72,7 @@ class DepthSnapshot(Model):
     bids_price = ArrayField(Float64Field())
     asks_quantity = ArrayField(Float64Field())
     asks_price = ArrayField(Float64Field())
-    symbol = StringField()
+    symbol = LowCardinalityField(StringField())
 
     engine = MergeTree(
         partition_key=(F.toYYYYMMDD(timestamp), "symbol"),
@@ -87,7 +88,7 @@ class DiffDepthStream(Model):
     bids_price = ArrayField(Float64Field())
     asks_quantity = ArrayField(Float64Field())
     asks_price = ArrayField(Float64Field())
-    symbol = StringField()
+    symbol = LowCardinalityField(StringField())
 
     engine = ReplacingMergeTree(
         partition_key=(F.toYYYYMMDD(timestamp), "symbol"),
