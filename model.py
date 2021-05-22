@@ -75,7 +75,7 @@ class DepthSnapshot(Model):
     symbol = LowCardinalityField(StringField())
 
     engine = MergeTree(
-        partition_key=(F.toYYYYMMDD(timestamp), "symbol"),
+        partition_key=("symbol",),
         order_by=("timestamp", "last_update_id"),
     )
 
@@ -91,7 +91,7 @@ class DiffDepthStream(Model):
     symbol = LowCardinalityField(StringField())
 
     engine = ReplacingMergeTree(
-        partition_key=(F.toYYYYMMDD(timestamp), "symbol"),
+        partition_key=(F.toMonday(timestamp), "symbol"),
         order_by=("timestamp", "first_update_id", "final_update_id"),
     )
 
