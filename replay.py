@@ -1,11 +1,10 @@
 from datetime import datetime
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Any, Dict, Generator, List, Optional, Tuple
 from infi.clickhouse_orm.database import Database
 from model import DiffDepthStream, DepthSnapshot
 from clickhouse_driver import Client
 from config import CONFIG
 from sortedcontainers import SortedDict
-from tqdm import tqdm
 from itertools import chain
 from dataclasses import dataclass
 
@@ -40,10 +39,100 @@ def diff_depth_stream_generator(
             yield row
 
 
+class DataBlock:
+    client: Client
+    settings: Dict[str, Any]
+    beginning_update_id: int
+    ending_update_id: int
+    block_snapshot_ids: List[int]
+    symbol: str
+    size: int
+
+    def __init__(self, symbol: str, last_update_id: int, block_size: int = 5_000):
+        self.symbol = symbol
+        database = CONFIG.db_name
+        self.client = Client(host=CONFIG.host_name)
+        self.client.execute(f"USE {database}")
+        sql = (
+            "SELECT first_update_id, final_update_id FROM diffdepthstream "
+            f"WHERE symbol='{symbol}' AND first_update_id>{last_update_id} "
+            "ORDER BY first_update_id"
+        )
+        self.settings = {"max_block_size": block_size}
+        rows_gen = self.client.execute_iter(sql, settings=self.settings)
+        prev_update_id = None
+        self.size = 0
+        for row in rows_gen:
+            self.size += 1
+            if prev_update_id:
+                first_update_id, final_update_id = row
+                if prev_update_id + 1 != first_update_id:
+                    self.ending_update_id = prev_update_id
+                    self.size -= 1
+                    break
+                else:
+                    prev_update_id = final_update_id
+            else:
+                first_update_id, prev_update_id = row
+                self.beginning_update_id = first_update_id
+        else:
+            self.ending_update_id = prev_update_id
+
+        if self.ending_update_id is None:
+            return
+        self.client.disconnect()
+        self.client.execute(f"USE {database}")
+
+        self.beginning_timestamp = self.client.execute((
+            "SELECT timestamp FROM diffdepthstream "
+            f"WHERE first_update_id={self.beginning_update_id} AND "
+            f"symbol='{symbol}'"
+            ))[0][0]
+
+        self.ending_timestamp = self.client.execute((
+            "SELECT timestamp FROM diffdepthstream "
+            f"WHERE final_update_id={self.ending_update_id} AND "
+            f"symbol='{symbol}'"
+            ))[0][0]
+
+        self.block_snapshot_ids = [
+            id_
+            for id_ in get_snapshots_update_ids(symbol)
+            if self.beginning_update_id <= id_ + 1 <= self.ending_update_id
+        ]
+        self.block_snapshot_ids
+
+    def __repr__(self) -> str:
+        if self.ending_update_id:
+            return (
+                f"Datablock(symbol='{self.symbol}', size={self.size},"
+                f" {self.beginning_update_id},"
+                f" {self.ending_update_id})"
+            )
+        else:
+            return (
+                f"Datablock(symbol='{self.symbol}', {self.beginning_update_id}, EMPTY)"
+            )
+
+    def __len__(self) -> int:
+        return self.size
+
+
+def get_all_data_blocks(
+    symbol: str, last_update_id: int, block_size: int = 5_000
+) -> List[DataBlock]:
+    datablocks = []
+    cur_block = DataBlock(symbol, last_update_id, block_size)
+    while cur_block.size != 0:
+        datablocks.append(cur_block)
+        cur_block = DataBlock(symbol, cur_block.ending_update_id, block_size)
+    return datablocks
+
+
 @dataclass
 class FullBook:
-    """The full orderbook object
-    """
+    """The full orderbook object"""
+
     timestamp: datetime
     """Timestamp for the current orderbook
     """
@@ -63,8 +152,8 @@ class FullBook:
 
 @dataclass
 class PartialBook:
-    """The partial orderbook object
-    """
+    """The partial orderbook object"""
+
     timestamp: datetime
     """Timestamp for the current orderbook
     """
@@ -366,11 +455,6 @@ def partial_orderbook_generator(
         )
 
 
-class DataBlock:
-    def __init__(self, symbol: str, last_update_id: int):
-        pass
-
-
 def lists_to_dict(price: List[float], quantity: List[float]) -> Dict[float, float]:
     return {p: q for p, q in zip(price, quantity)}
 
@@ -389,18 +473,17 @@ def get_snapshots_update_ids(symbol: str) -> List[int]:
     database = CONFIG.db_name
     client = Client(host=CONFIG.host_name)
     client.execute(f"USE {database}")
-    return client.execute(
-        f"SELECT last_update_id FROM depthsnapshot WHERE symbol = '{symbol.upper()}' ORDER BY "
-        "timestamp"
-    )
+    return [
+        id_[0]
+        for id_ in client.execute(
+            f"SELECT last_update_id FROM depthsnapshot WHERE symbol = '{symbol.upper()}' ORDER BY "
+            "timestamp"
+        )
+    ]
 
 
 if __name__ == "__main__":
-    i = 0
-    first_id = last_id = 0
-    for r in tqdm(orderbook_generator(0, "ETHUSDT", block_size=5_000)):
-        i += 1
-        if r.last_update_id >= 7518353678:
-            break
-    print(SortedDict(r.bids))
-
+    datablocks = get_all_data_blocks("DOGEUSDT", 0)
+    for block in datablocks:
+        print(block)
+        print(block.ending_timestamp - block.beginning_timestamp)
