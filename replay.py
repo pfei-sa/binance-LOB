@@ -7,7 +7,7 @@ from config import CONFIG
 from sortedcontainers import SortedDict
 from tqdm import tqdm
 from itertools import chain
-from pydantic import BaseModel
+from dataclasses import dataclass
 
 
 def diff_depth_stream_generator(
@@ -40,19 +40,46 @@ def diff_depth_stream_generator(
             yield row
 
 
-class FullBook(BaseModel):
+@dataclass
+class FullBook:
+    """The full orderbook object
+    """
     timestamp: datetime
+    """Timestamp for the current orderbook
+    """
     last_update_id: int
+    """Last update id of the current orderbook
+    """
     bids: Dict[float, float]
+    """Bids orderbook mapping from price to volumn
+    """
     asks: Dict[float, float]
+    """Asks orderbook mapping from price to volumn
+    """
     symbol: str
+    """Symbol of the orderbook
+    """
 
 
-class PartialBook(BaseModel):
+@dataclass
+class PartialBook:
+    """The partial orderbook object
+    """
     timestamp: datetime
+    """Timestamp for the current orderbook
+    """
     last_update_id: int
+    """Last update id of the current orderbook
+    """
     book: List[float]
+    """Partial order book in the following format:
+
+```[ask_1_price, ask_1_vol, bids_1_price, bids_1_vol, ask_2_price,...,bids_n_vol]```
+    where n is the level.
+    """
     symbol: str
+    """Symbol of the orderbook
+    """
 
 
 def orderbook_generator(
@@ -371,8 +398,9 @@ def get_snapshots_update_ids(symbol: str) -> List[int]:
 if __name__ == "__main__":
     i = 0
     first_id = last_id = 0
-    for r in tqdm(partial_orderbook_generator(0, "ETHUSDT", block_size=5_000)):
+    for r in tqdm(orderbook_generator(0, "ETHUSDT", block_size=5_000)):
         i += 1
-        if r.last_update_id() >= 7518353678:
+        if r.last_update_id >= 7518353678:
             break
-    print
+    print(SortedDict(r.bids))
+
