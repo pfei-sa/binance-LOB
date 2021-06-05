@@ -7,6 +7,7 @@ from config import CONFIG
 from sortedcontainers import SortedDict
 from tqdm import tqdm
 from itertools import chain
+from pydantic import BaseModel
 
 
 def diff_depth_stream_generator(
@@ -39,14 +40,27 @@ def diff_depth_stream_generator(
             yield row
 
 
+class FullBook(BaseModel):
+    timestamp: datetime
+    last_update_id: int
+    bids: Dict[float, float]
+    asks: Dict[float, float]
+    symbol: str
+
+
+class PartialBook(BaseModel):
+    timestamp: datetime
+    last_update_id: int
+    book: List[float]
+    symbol: str
+
+
 def orderbook_generator(
     last_update_id: int,
     symbol: str,
     block_size: Optional[int] = 5_000,
     return_copy: bool = True,
-) -> Generator[
-    Tuple[datetime, int, Dict[float, float], Dict[float, float], str], None, None
-]:
+) -> Generator[FullBook, None, None]:
     """Generator to iterate reconstructed full orderbook from diff stream where
     each element yielded are orderbook constructed from each stream update. The iterator
     is exhausted when there is a gap in the diff depth stream (probably due to connection lost
@@ -73,14 +87,7 @@ def orderbook_generator(
         ValueError: ignore
 
     Yields:
-        Generator[ Tuple[datetime, int, Dict[float, float], Dict[float, float], str], None, None ]:
-            A tuple with reconstructed orderbook. Where:
-            tuple[0] is the timestamp for orderbook
-            tuple[1] is the last update id
-            tuple[2] is the bids book
-            tuple[3] is the asks book
-                Both orderbook are returnd as dictionary mapping from price to quantity
-            tuple[4] is the symbol
+        FullBook: Full Orderbook object representing the reconstructed orderbook
     """
     database = CONFIG.db_name
     db = Database(CONFIG.db_name, db_url=f"http://{CONFIG.host_name}:8123/")
@@ -114,9 +121,21 @@ def orderbook_generator(
     asks_book = lists_to_dict(asks_price, asks_quantity)
 
     if return_copy:
-        yield (timestamp, last_update_id, bids_book.copy(), asks_book.copy(), symbol)
+        yield FullBook(
+            timestamp=timestamp,
+            last_update_id=last_update_id,
+            bids=bids_book.copy(),
+            asks=asks_book.copy(),
+            symbol=symbol,
+        )
     else:
-        yield (timestamp, last_update_id, bids_book, asks_book, symbol)
+        yield FullBook(
+            timestamp=timestamp,
+            last_update_id=last_update_id,
+            bids=bids_book,
+            asks=asks_book,
+            symbol=symbol,
+        )
 
     prev_final_update_id = None
     for diff_stream in diff_depth_stream_generator(last_update_id, symbol, block_size):
@@ -168,20 +187,26 @@ def orderbook_generator(
         update_book(asks_book, diff_asks_price, diff_asks_quantity)
 
         if return_copy:
-            yield (
-                timestamp,
-                final_update_id,
-                bids_book.copy(),
-                asks_book.copy(),
-                symbol,
+            yield FullBook(
+                timestamp=timestamp,
+                last_update_id=final_update_id,
+                bids=bids_book.copy(),
+                asks=asks_book.copy(),
+                symbol=symbol,
             )
         else:
-            yield (timestamp, final_update_id, bids_book, asks_book, symbol)
+            yield FullBook(
+                timestamp=timestamp,
+                last_update_id=final_update_id,
+                bids=bids_book,
+                asks=asks_book,
+                symbol=symbol,
+            )
 
 
 def partial_orderbook_generator(
     last_update_id: int, symbol: str, level: int = 10, block_size: Optional[int] = 5_000
-) -> Generator[Tuple[datetime, int, List[float], str], None, None]:
+) -> Generator[PartialBook, None, None]:
     """Similar to orderbook_generator but instead of yielding a full constructed orderbook
     while maintaining a full local orderbook, a partial orderbook with level for both bids and
     asks are yielded and only a partial orderbook is maintained. This generator should be much
@@ -204,14 +229,7 @@ def partial_orderbook_generator(
         ValueError: ignore
 
     Yields:
-        Generator[Tuple[datetime, int, List[float], str], None, None]:
-            A tuple with reconstructed orderbook. Where:
-            tuple[0] is the timestamp for orderbook
-            tuple[1] is the last update id
-            tuple[2] is the result orderbook in the folloing format
-                [bid_1_price, bid_1_qty, ask_1_price, ask_1_qty, bid_2_price,..., ask_n_qty]
-                where n is the level supplied
-            tuple[3] is the symbol
+        PartialBook: Partial Orderbook object representing reconstructed orderbook
     """
     database = CONFIG.db_name
     db = Database(CONFIG.db_name)
@@ -251,7 +269,9 @@ def partial_orderbook_generator(
         val for (bids, asks) in zip(bids_items, asks_items) for val in chain(bids, asks)
     ]
 
-    yield (timestamp, last_update_id, result, symbol)
+    yield PartialBook(
+        timestamp=timestamp, last_update_id=last_update_id, book=result, symbol=symbol
+    )
     prev_final_update_id = None
     for diff_stream in diff_depth_stream_generator(last_update_id, symbol, block_size):
         # https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
@@ -311,7 +331,17 @@ def partial_orderbook_generator(
             for val in chain(bids, asks)
         ]
 
-        yield (timestamp, final_update_id, result, symbol)
+        yield PartialBook(
+            timestamp=timestamp,
+            last_update_id=final_update_id,
+            book=result,
+            symbol=symbol,
+        )
+
+
+class DataBlock:
+    def __init__(self, symbol: str, last_update_id: int):
+        pass
 
 
 def lists_to_dict(price: List[float], quantity: List[float]) -> Dict[float, float]:
@@ -341,10 +371,8 @@ def get_snapshots_update_ids(symbol: str) -> List[int]:
 if __name__ == "__main__":
     i = 0
     first_id = last_id = 0
-    for r in tqdm(orderbook_generator(0, "ETHUSDT", block_size=5_000)):
+    for r in tqdm(partial_orderbook_generator(0, "ETHUSDT", block_size=5_000)):
         i += 1
-        if r[1] >= 7494682003:
+        if r.last_update_id() >= 7518353678:
             break
-    print(i)
-    print(r)
-    print(get_snapshots_update_ids("ETHUSDT"))
+    print
