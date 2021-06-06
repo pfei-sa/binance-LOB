@@ -1,0 +1,1452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>replay API documentation</title>
+<meta name="description" content="Replay modules …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>replay</code></h1>
+</header>
+<section id="section-intro">
+<p>Replay modules.</p>
+<p>Inlcude all useful function and classes for reconstructing orderbook from database</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34; Replay modules.
+
+Inlcude all useful function and classes for reconstructing orderbook from database
+&#34;&#34;&#34;
+from datetime import datetime
+from typing import Any, Dict, Generator, List, Optional, Tuple
+from infi.clickhouse_orm.database import Database
+from model import DiffDepthStream, DepthSnapshot
+from clickhouse_driver import Client
+from config import CONFIG
+from sortedcontainers import SortedDict
+from itertools import chain
+from dataclasses import dataclass
+
+
+def diff_depth_stream_generator(
+    last_update_id: int, symbol: str, block_size: Optional[int] = None
+) -&gt; Generator[
+    Tuple[datetime, int, int, List[float], List[float], List[float], List[float], str],
+    None,
+    None,
+]:
+    database = CONFIG.db_name
+    db = Database(CONFIG.db_name, db_url=f&#34;http://{CONFIG.host_name}:8123/&#34;)
+    client = Client(host=CONFIG.host_name)
+    client.execute(f&#34;USE {database}&#34;)
+    qs = (
+        DiffDepthStream.objects_in(db)
+        .filter(
+            DiffDepthStream.symbol == symbol.upper(),
+            DiffDepthStream.final_update_id &gt;= last_update_id,
+        )
+        .order_by(&#34;timestamp&#34;)
+    )
+
+    if block_size is None:
+        for row in client.execute(qs.as_sql()):
+            yield row
+    else:
+        settings = {&#34;max_block_size&#34;: block_size}
+        rows_gen = client.execute_iter(qs.as_sql(), settings=settings)
+        for row in rows_gen:
+            yield row
+
+
+class DataBlock:
+    &#34;&#34;&#34;Data block class that represents a continuous stream of diff depth stream.
+
+    A continuous stream of diff depth stream is a abstract collection of diff depth stream
+    where the final_update_id of previous diff equals to the first_update_id - 1 of the next.
+
+    Attributes:
+        client: clickhouse driver client object
+        settings: settings for SQL execution
+        beginning_update_id: first update id included in the data block
+        beginning_timestamp: timestamp associated with first diff depth stream
+        ending_update_id: last update id included in the data block
+        ending_timestamp: timestamp associated with last diff depth stream
+        block_snapshot_ids: list of snapshot ids within data block
+        symbol: symbol for the data block
+        size: number of diff depth stream in the data block
+    &#34;&#34;&#34;
+
+    client: Client
+    settings: Dict[str, Any]
+    beginning_update_id: int
+    beginning_timestamp: datetime
+    ending_update_id: int
+    ending_timestamp: datetime
+    block_snapshot_ids: List[int]
+    symbol: str
+    size: int
+
+    def __init__(self, symbol: str, last_update_id: int, block_size: int = 5_000):
+        self.symbol = symbol
+        database = CONFIG.db_name
+        self.client = Client(host=CONFIG.host_name)
+        self.client.execute(f&#34;USE {database}&#34;)
+        sql = (
+            &#34;SELECT first_update_id, final_update_id FROM diffdepthstream &#34;
+            f&#34;WHERE symbol=&#39;{symbol}&#39; AND first_update_id&gt;{last_update_id} &#34;
+            &#34;ORDER BY first_update_id&#34;
+        )
+        self.settings = {&#34;max_block_size&#34;: block_size}
+        rows_gen = self.client.execute_iter(sql, settings=self.settings)
+        prev_update_id = None
+        self.size = 0
+        for row in rows_gen:
+            self.size += 1
+            if prev_update_id:
+                first_update_id, final_update_id = row
+                if prev_update_id + 1 != first_update_id:
+                    self.ending_update_id = prev_update_id
+                    self.size -= 1
+                    break
+                else:
+                    prev_update_id = final_update_id
+            else:
+                first_update_id, prev_update_id = row
+                self.beginning_update_id = first_update_id
+        else:
+            self.ending_update_id = prev_update_id
+
+        if self.ending_update_id is None:
+            return
+        self.client.disconnect()
+        self.client.execute(f&#34;USE {database}&#34;)
+
+        self.beginning_timestamp = self.client.execute(
+            (
+                &#34;SELECT timestamp FROM diffdepthstream &#34;
+                f&#34;WHERE first_update_id={self.beginning_update_id} AND &#34;
+                f&#34;symbol=&#39;{symbol}&#39;&#34;
+            )
+        )[0][0]
+
+        self.ending_timestamp = self.client.execute(
+            (
+                &#34;SELECT timestamp FROM diffdepthstream &#34;
+                f&#34;WHERE final_update_id={self.ending_update_id} AND &#34;
+                f&#34;symbol=&#39;{symbol}&#39;&#34;
+            )
+        )[0][0]
+
+        self.block_snapshot_ids = [
+            id_
+            for id_ in get_snapshots_update_ids(symbol)
+            if self.beginning_update_id &lt;= id_ + 1 &lt;= self.ending_update_id
+        ]
+        self.block_snapshot_ids
+
+    def fetch_partial_book(self, level: int = 10, block_size: int = 5_000):
+        &#34;&#34;&#34;Returns a generator for the partial book
+
+        Args:
+            level (int, optional): See `partial_book_generator` . Defaults to 10.
+            block_size (int, optional): See `partial_book_generator`. Defaults to 5_000.
+
+        Returns:
+            Generator[PartialBook]: generator for the parital book
+        &#34;&#34;&#34;
+        return partial_orderbook_generator(
+            self.beginning_update_id - 1, self.symbol, level, block_size
+        )
+
+    def __repr__(self) -&gt; str:
+        if self.ending_update_id:
+            return (
+                f&#34;Datablock(symbol=&#39;{self.symbol}&#39;, size={self.size},&#34;
+                f&#34; {self.beginning_update_id},&#34;
+                f&#34; {self.ending_update_id})&#34;
+            )
+        else:
+            return (
+                f&#34;Datablock(symbol=&#39;{self.symbol}&#39;, {self.beginning_update_id}, EMPTY)&#34;
+            )
+
+    def __len__(self) -&gt; int:
+        return self.size
+
+
+def get_all_data_blocks(
+    symbol: str, last_update_id: int, block_size: int = 5_000
+) -&gt; List[DataBlock]:
+    datablocks = []
+    cur_block = DataBlock(symbol, last_update_id, block_size)
+    while cur_block.size != 0:
+        datablocks.append(cur_block)
+        cur_block = DataBlock(symbol, cur_block.ending_update_id, block_size)
+    return datablocks
+
+
+@dataclass
+class FullBook:
+    &#34;&#34;&#34;The full orderbook object&#34;&#34;&#34;
+
+    timestamp: datetime
+    &#34;&#34;&#34;Timestamp for the current orderbook
+    &#34;&#34;&#34;
+    last_update_id: int
+    &#34;&#34;&#34;Last update id of the current orderbook
+    &#34;&#34;&#34;
+    bids: Dict[float, float]
+    &#34;&#34;&#34;Bids orderbook mapping from price to volumn
+    &#34;&#34;&#34;
+    asks: Dict[float, float]
+    &#34;&#34;&#34;Asks orderbook mapping from price to volumn
+    &#34;&#34;&#34;
+    symbol: str
+    &#34;&#34;&#34;Symbol of the orderbook
+    &#34;&#34;&#34;
+
+
+@dataclass
+class PartialBook:
+    &#34;&#34;&#34;The partial orderbook object&#34;&#34;&#34;
+
+    timestamp: datetime
+    &#34;&#34;&#34;Timestamp for the current orderbook
+    &#34;&#34;&#34;
+    last_update_id: int
+    &#34;&#34;&#34;Last update id of the current orderbook
+    &#34;&#34;&#34;
+    book: List[float]
+    &#34;&#34;&#34;Partial order book in the following format:
+
+```[ask_1_price, ask_1_vol, bids_1_price, bids_1_vol, ask_2_price,...,bids_n_vol]```
+    where n is the level.
+    &#34;&#34;&#34;
+    symbol: str
+    &#34;&#34;&#34;Symbol of the orderbook
+    &#34;&#34;&#34;
+
+
+def orderbook_generator(
+    last_update_id: int,
+    symbol: str,
+    block_size: Optional[int] = 5_000,
+    return_copy: bool = True,
+) -&gt; Generator[FullBook, None, None]:
+    &#34;&#34;&#34;Generator to iterate reconstructed full orderbook from diff stream where
+    each element yielded are orderbook constructed from each stream update. The iterator
+    is exhausted when there is a gap in the diff depth stream (probably due to connection lost
+    while logging data), i.e. the previous final_update_id + 1 != first_update_id, or there is no
+    more diff stream in the database. Last recieved last_update_id can be used again to create new
+    generator to construct future orderbooks.
+
+    Args:
+        last_update_id (int): target update id to begin iterator. The first item
+            from the iterator will be the first snapshot with last update id that
+            is strictly greater than the one applied. Sucessive item will be constructed
+            with diff stream while a local orderbook is maintained.
+            See the link below for detail
+            https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
+            for more detail.
+        symbol (str): symbol for orderbook to reconstruct
+        block_size (Optional[int], optional): pagniate size for executing SQL queries. None
+            means all data are retrived at once. Defaults to 5000.
+        return_copy (bool, optional): whether a copy of local orderbook is made when yield. Set to
+            false if orderbook yielded is used in a read only manner or local orderbook might be
+            corrupted, and could speedup the generator significantly. Defaults to true.
+
+    Raises:
+        ValueError: ignore
+
+    Yields:
+        FullBook: Full Orderbook object representing the reconstructed orderbook
+    &#34;&#34;&#34;
+    database = CONFIG.db_name
+    db = Database(CONFIG.db_name, db_url=f&#34;http://{CONFIG.host_name}:8123/&#34;)
+    client = Client(host=CONFIG.host_name)
+    client.execute(f&#34;USE {database}&#34;)
+
+    qs = (
+        DepthSnapshot.objects_in(db).filter(
+            DepthSnapshot.symbol == symbol.upper(),
+            DepthSnapshot.last_update_id &gt; last_update_id,
+        )
+    ).order_by(&#34;timestamp&#34;)
+
+    sql_result = client.execute(qs.as_sql())
+    if len(sql_result) == 0:
+        return
+    snapshot = sql_result.pop(0)
+    next_snapshot = sql_result.pop(0) if sql_result else None
+    client.disconnect()
+    (
+        timestamp,
+        last_update_id,
+        bids_quantity,
+        bids_price,
+        asks_quantity,
+        asks_price,
+        _,
+    ) = snapshot
+
+    bids_book = lists_to_dict(bids_price, bids_quantity)
+    asks_book = lists_to_dict(asks_price, asks_quantity)
+
+    if return_copy:
+        yield FullBook(
+            timestamp=timestamp,
+            last_update_id=last_update_id,
+            bids=bids_book.copy(),
+            asks=asks_book.copy(),
+            symbol=symbol,
+        )
+    else:
+        yield FullBook(
+            timestamp=timestamp,
+            last_update_id=last_update_id,
+            bids=bids_book,
+            asks=asks_book,
+            symbol=symbol,
+        )
+
+    prev_final_update_id = None
+    for diff_stream in diff_depth_stream_generator(last_update_id, symbol, block_size):
+        # https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
+        (
+            timestamp,
+            first_update_id,
+            final_update_id,
+            diff_bids_quantity,
+            diff_bids_price,
+            diff_asks_quantity,
+            diff_asks_price,
+            _,
+        ) = diff_stream
+
+        if (
+            prev_final_update_id is not None
+            and prev_final_update_id + 1 != first_update_id
+        ):
+            return
+        prev_final_update_id = final_update_id
+
+        if prev_final_update_id is None and (
+            last_update_id + 1 &lt; first_update_id or last_update_id + 1 &gt; final_update_id
+        ):
+            raise ValueError()
+
+        if next_snapshot is not None and (
+            first_update_id &lt;= next_snapshot[1] + 1 &lt;= final_update_id
+        ):
+            (
+                _,
+                _,
+                bids_quantity,
+                bids_price,
+                asks_quantity,
+                asks_price,
+                _,
+            ) = next_snapshot
+
+            bids_book.clear()
+            asks_book.clear()
+            bids_book.update(zip(bids_price, bids_quantity))
+            asks_book.update(zip(asks_price, asks_quantity))
+
+            next_snapshot = sql_result.pop(0) if sql_result else None
+
+        update_book(bids_book, diff_bids_price, diff_bids_quantity)
+        update_book(asks_book, diff_asks_price, diff_asks_quantity)
+
+        if return_copy:
+            yield FullBook(
+                timestamp=timestamp,
+                last_update_id=final_update_id,
+                bids=bids_book.copy(),
+                asks=asks_book.copy(),
+                symbol=symbol,
+            )
+        else:
+            yield FullBook(
+                timestamp=timestamp,
+                last_update_id=final_update_id,
+                bids=bids_book,
+                asks=asks_book,
+                symbol=symbol,
+            )
+
+
+def partial_orderbook_generator(
+    last_update_id: int, symbol: str, level: int = 10, block_size: Optional[int] = 5_000
+) -&gt; Generator[PartialBook, None, None]:
+    &#34;&#34;&#34;Similar to orderbook_generator but instead of yielding a full constructed orderbook
+    while maintaining a full local orderbook, a partial orderbook with level for both bids and
+    asks are yielded and only a partial orderbook is maintained. This generator should be much
+    faster than orderbook_generator.
+
+    Args:
+        last_update_id (int): target update id to begin iterator. The first item
+            from the iterator will be the first snapshot with last update id that
+            is strictly greater than the one applied. Sucessive item will be constructed
+            with diff stream while a local orderbook is maintained.
+            See the link below for detail
+            https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
+            for more detail.
+        symbol (str): symbol for orderbook to reconstruct
+        level (int, optional): levels of orderbook to return. Defaults to 10.
+        block_size (Optional[int], optional): pagniate size for executing SQL queries. None
+            means all data are retrived at once. Defaults to 5000.
+
+    Raises:
+        ValueError: ignore
+
+    Yields:
+        PartialBook: Partial Orderbook object representing reconstructed orderbook
+    &#34;&#34;&#34;
+    database = CONFIG.db_name
+    db = Database(CONFIG.db_name)
+    client = Client(host=CONFIG.host_name)
+    client.execute(f&#34;USE {database}&#34;)
+
+    qs = (
+        DepthSnapshot.objects_in(db).filter(
+            DepthSnapshot.symbol == symbol.upper(),
+            DepthSnapshot.last_update_id &gt; last_update_id,
+        )
+    ).order_by(&#34;timestamp&#34;)
+
+    sql_result = client.execute(qs.as_sql())
+    if len(sql_result) == 0:
+        return
+    snapshot = sql_result.pop(0)
+    next_snapshot = sql_result.pop(0) if sql_result else None
+    client.disconnect()
+    (
+        timestamp,
+        last_update_id,
+        bids_quantity,
+        bids_price,
+        asks_quantity,
+        asks_price,
+        _,
+    ) = snapshot
+
+    bids_book = SortedDict(lambda x: -x, lists_to_dict(bids_price, bids_quantity))
+    asks_book = SortedDict(lists_to_dict(asks_price, asks_quantity))
+
+    bids_items = bids_book.items()[:level]
+    asks_items = asks_book.items()[:level]
+
+    result = [
+        val for (bids, asks) in zip(bids_items, asks_items) for val in chain(bids, asks)
+    ]
+
+    yield PartialBook(
+        timestamp=timestamp, last_update_id=last_update_id, book=result, symbol=symbol
+    )
+    prev_final_update_id = None
+    for diff_stream in diff_depth_stream_generator(last_update_id, symbol, block_size):
+        # https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
+        (
+            timestamp,
+            first_update_id,
+            final_update_id,
+            diff_bids_quantity,
+            diff_bids_price,
+            diff_asks_quantity,
+            diff_asks_price,
+            _,
+        ) = diff_stream
+
+        if (
+            prev_final_update_id is not None
+            and prev_final_update_id + 1 != first_update_id
+        ):
+            return
+
+        prev_final_update_id = final_update_id
+
+        if prev_final_update_id is None and (
+            last_update_id + 1 &lt; first_update_id or last_update_id + 1 &gt; final_update_id
+        ):
+            raise ValueError()
+
+        if next_snapshot is not None and (
+            first_update_id &lt;= next_snapshot[1] + 1 &lt;= final_update_id
+        ):
+            (
+                _,
+                _,
+                bids_quantity,
+                bids_price,
+                asks_quantity,
+                asks_price,
+                _,
+            ) = next_snapshot
+
+            bids_book.clear()
+            asks_book.clear()
+            bids_book.update(zip(bids_price, bids_quantity))
+            asks_book.update(zip(asks_price, asks_quantity))
+
+            next_snapshot = sql_result.pop(0) if sql_result else None
+
+        update_book(bids_book, diff_bids_price, diff_bids_quantity)
+        update_book(asks_book, diff_asks_price, diff_asks_quantity)
+
+        bids_items = bids_book.items()[:level]
+        asks_items = asks_book.items()[:level]
+
+        result = [
+            val
+            for (bids, asks) in zip(bids_items, asks_items)
+            for val in chain(bids, asks)
+        ]
+
+        yield PartialBook(
+            timestamp=timestamp,
+            last_update_id=final_update_id,
+            book=result,
+            symbol=symbol,
+        )
+
+
+def lists_to_dict(price: List[float], quantity: List[float]) -&gt; Dict[float, float]:
+    return {p: q for p, q in zip(price, quantity)}
+
+
+def update_book(
+    book: Dict[float, float], price: List[float], quantity: List[float]
+) -&gt; None:
+    for p, q in zip(price, quantity):
+        if q == 0:
+            book.pop(p, 0)
+        else:
+            book[p] = q
+
+
+def get_snapshots_update_ids(symbol: str) -&gt; List[int]:
+    database = CONFIG.db_name
+    client = Client(host=CONFIG.host_name)
+    client.execute(f&#34;USE {database}&#34;)
+    return [
+        id_[0]
+        for id_ in client.execute(
+            f&#34;SELECT last_update_id FROM depthsnapshot WHERE symbol = &#39;{symbol.upper()}&#39; ORDER BY &#34;
+            &#34;timestamp&#34;
+        )
+    ]
+
+
+if __name__ == &#34;__main__&#34;:
+    datablocks = get_all_data_blocks(&#34;DOGEUSDT&#34;, 0)
+    for block in datablocks:
+        print(block)
+        print(block.ending_timestamp - block.beginning_timestamp)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="replay.diff_depth_stream_generator"><code class="name flex">
+<span>def <span class="ident">diff_depth_stream_generator</span></span>(<span>last_update_id: int, symbol: str, block_size: Union[int, NoneType] = None) ‑> Generator[Tuple[datetime.datetime, int, int, List[float], List[float], List[float], List[float], str], NoneType, NoneType]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def diff_depth_stream_generator(
+    last_update_id: int, symbol: str, block_size: Optional[int] = None
+) -&gt; Generator[
+    Tuple[datetime, int, int, List[float], List[float], List[float], List[float], str],
+    None,
+    None,
+]:
+    database = CONFIG.db_name
+    db = Database(CONFIG.db_name, db_url=f&#34;http://{CONFIG.host_name}:8123/&#34;)
+    client = Client(host=CONFIG.host_name)
+    client.execute(f&#34;USE {database}&#34;)
+    qs = (
+        DiffDepthStream.objects_in(db)
+        .filter(
+            DiffDepthStream.symbol == symbol.upper(),
+            DiffDepthStream.final_update_id &gt;= last_update_id,
+        )
+        .order_by(&#34;timestamp&#34;)
+    )
+
+    if block_size is None:
+        for row in client.execute(qs.as_sql()):
+            yield row
+    else:
+        settings = {&#34;max_block_size&#34;: block_size}
+        rows_gen = client.execute_iter(qs.as_sql(), settings=settings)
+        for row in rows_gen:
+            yield row</code></pre>
+</details>
+</dd>
+<dt id="replay.get_all_data_blocks"><code class="name flex">
+<span>def <span class="ident">get_all_data_blocks</span></span>(<span>symbol: str, last_update_id: int, block_size: int = 5000) ‑> List[<a title="replay.DataBlock" href="#replay.DataBlock">DataBlock</a>]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_all_data_blocks(
+    symbol: str, last_update_id: int, block_size: int = 5_000
+) -&gt; List[DataBlock]:
+    datablocks = []
+    cur_block = DataBlock(symbol, last_update_id, block_size)
+    while cur_block.size != 0:
+        datablocks.append(cur_block)
+        cur_block = DataBlock(symbol, cur_block.ending_update_id, block_size)
+    return datablocks</code></pre>
+</details>
+</dd>
+<dt id="replay.get_snapshots_update_ids"><code class="name flex">
+<span>def <span class="ident">get_snapshots_update_ids</span></span>(<span>symbol: str) ‑> List[int]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_snapshots_update_ids(symbol: str) -&gt; List[int]:
+    database = CONFIG.db_name
+    client = Client(host=CONFIG.host_name)
+    client.execute(f&#34;USE {database}&#34;)
+    return [
+        id_[0]
+        for id_ in client.execute(
+            f&#34;SELECT last_update_id FROM depthsnapshot WHERE symbol = &#39;{symbol.upper()}&#39; ORDER BY &#34;
+            &#34;timestamp&#34;
+        )
+    ]</code></pre>
+</details>
+</dd>
+<dt id="replay.lists_to_dict"><code class="name flex">
+<span>def <span class="ident">lists_to_dict</span></span>(<span>price: List[float], quantity: List[float]) ‑> Dict[float, float]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def lists_to_dict(price: List[float], quantity: List[float]) -&gt; Dict[float, float]:
+    return {p: q for p, q in zip(price, quantity)}</code></pre>
+</details>
+</dd>
+<dt id="replay.orderbook_generator"><code class="name flex">
+<span>def <span class="ident">orderbook_generator</span></span>(<span>last_update_id: int, symbol: str, block_size: Union[int, NoneType] = 5000, return_copy: bool = True) ‑> Generator[<a title="replay.FullBook" href="#replay.FullBook">FullBook</a>, NoneType, NoneType]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generator to iterate reconstructed full orderbook from diff stream where
+each element yielded are orderbook constructed from each stream update. The iterator
+is exhausted when there is a gap in the diff depth stream (probably due to connection lost
+while logging data), i.e. the previous final_update_id + 1 != first_update_id, or there is no
+more diff stream in the database. Last recieved last_update_id can be used again to create new
+generator to construct future orderbooks.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>last_update_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>target update id to begin iterator. The first item
+from the iterator will be the first snapshot with last update id that
+is strictly greater than the one applied. Sucessive item will be constructed
+with diff stream while a local orderbook is maintained.
+See the link below for detail
+<a href="https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly">https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly</a>
+for more detail.</dd>
+<dt><strong><code>symbol</code></strong> :&ensp;<code>str</code></dt>
+<dd>symbol for orderbook to reconstruct</dd>
+<dt><strong><code>block_size</code></strong> :&ensp;<code>Optional[int]</code>, optional</dt>
+<dd>pagniate size for executing SQL queries. None
+means all data are retrived at once. Defaults to 5000.</dd>
+<dt><strong><code>return_copy</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>whether a copy of local orderbook is made when yield. Set to
+false if orderbook yielded is used in a read only manner or local orderbook might be
+corrupted, and could speedup the generator significantly. Defaults to true.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>ignore</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><code><a title="replay.FullBook" href="#replay.FullBook">FullBook</a></code></dt>
+<dd>Full Orderbook object representing the reconstructed orderbook</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def orderbook_generator(
+    last_update_id: int,
+    symbol: str,
+    block_size: Optional[int] = 5_000,
+    return_copy: bool = True,
+) -&gt; Generator[FullBook, None, None]:
+    &#34;&#34;&#34;Generator to iterate reconstructed full orderbook from diff stream where
+    each element yielded are orderbook constructed from each stream update. The iterator
+    is exhausted when there is a gap in the diff depth stream (probably due to connection lost
+    while logging data), i.e. the previous final_update_id + 1 != first_update_id, or there is no
+    more diff stream in the database. Last recieved last_update_id can be used again to create new
+    generator to construct future orderbooks.
+
+    Args:
+        last_update_id (int): target update id to begin iterator. The first item
+            from the iterator will be the first snapshot with last update id that
+            is strictly greater than the one applied. Sucessive item will be constructed
+            with diff stream while a local orderbook is maintained.
+            See the link below for detail
+            https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
+            for more detail.
+        symbol (str): symbol for orderbook to reconstruct
+        block_size (Optional[int], optional): pagniate size for executing SQL queries. None
+            means all data are retrived at once. Defaults to 5000.
+        return_copy (bool, optional): whether a copy of local orderbook is made when yield. Set to
+            false if orderbook yielded is used in a read only manner or local orderbook might be
+            corrupted, and could speedup the generator significantly. Defaults to true.
+
+    Raises:
+        ValueError: ignore
+
+    Yields:
+        FullBook: Full Orderbook object representing the reconstructed orderbook
+    &#34;&#34;&#34;
+    database = CONFIG.db_name
+    db = Database(CONFIG.db_name, db_url=f&#34;http://{CONFIG.host_name}:8123/&#34;)
+    client = Client(host=CONFIG.host_name)
+    client.execute(f&#34;USE {database}&#34;)
+
+    qs = (
+        DepthSnapshot.objects_in(db).filter(
+            DepthSnapshot.symbol == symbol.upper(),
+            DepthSnapshot.last_update_id &gt; last_update_id,
+        )
+    ).order_by(&#34;timestamp&#34;)
+
+    sql_result = client.execute(qs.as_sql())
+    if len(sql_result) == 0:
+        return
+    snapshot = sql_result.pop(0)
+    next_snapshot = sql_result.pop(0) if sql_result else None
+    client.disconnect()
+    (
+        timestamp,
+        last_update_id,
+        bids_quantity,
+        bids_price,
+        asks_quantity,
+        asks_price,
+        _,
+    ) = snapshot
+
+    bids_book = lists_to_dict(bids_price, bids_quantity)
+    asks_book = lists_to_dict(asks_price, asks_quantity)
+
+    if return_copy:
+        yield FullBook(
+            timestamp=timestamp,
+            last_update_id=last_update_id,
+            bids=bids_book.copy(),
+            asks=asks_book.copy(),
+            symbol=symbol,
+        )
+    else:
+        yield FullBook(
+            timestamp=timestamp,
+            last_update_id=last_update_id,
+            bids=bids_book,
+            asks=asks_book,
+            symbol=symbol,
+        )
+
+    prev_final_update_id = None
+    for diff_stream in diff_depth_stream_generator(last_update_id, symbol, block_size):
+        # https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
+        (
+            timestamp,
+            first_update_id,
+            final_update_id,
+            diff_bids_quantity,
+            diff_bids_price,
+            diff_asks_quantity,
+            diff_asks_price,
+            _,
+        ) = diff_stream
+
+        if (
+            prev_final_update_id is not None
+            and prev_final_update_id + 1 != first_update_id
+        ):
+            return
+        prev_final_update_id = final_update_id
+
+        if prev_final_update_id is None and (
+            last_update_id + 1 &lt; first_update_id or last_update_id + 1 &gt; final_update_id
+        ):
+            raise ValueError()
+
+        if next_snapshot is not None and (
+            first_update_id &lt;= next_snapshot[1] + 1 &lt;= final_update_id
+        ):
+            (
+                _,
+                _,
+                bids_quantity,
+                bids_price,
+                asks_quantity,
+                asks_price,
+                _,
+            ) = next_snapshot
+
+            bids_book.clear()
+            asks_book.clear()
+            bids_book.update(zip(bids_price, bids_quantity))
+            asks_book.update(zip(asks_price, asks_quantity))
+
+            next_snapshot = sql_result.pop(0) if sql_result else None
+
+        update_book(bids_book, diff_bids_price, diff_bids_quantity)
+        update_book(asks_book, diff_asks_price, diff_asks_quantity)
+
+        if return_copy:
+            yield FullBook(
+                timestamp=timestamp,
+                last_update_id=final_update_id,
+                bids=bids_book.copy(),
+                asks=asks_book.copy(),
+                symbol=symbol,
+            )
+        else:
+            yield FullBook(
+                timestamp=timestamp,
+                last_update_id=final_update_id,
+                bids=bids_book,
+                asks=asks_book,
+                symbol=symbol,
+            )</code></pre>
+</details>
+</dd>
+<dt id="replay.partial_orderbook_generator"><code class="name flex">
+<span>def <span class="ident">partial_orderbook_generator</span></span>(<span>last_update_id: int, symbol: str, level: int = 10, block_size: Union[int, NoneType] = 5000) ‑> Generator[<a title="replay.PartialBook" href="#replay.PartialBook">PartialBook</a>, NoneType, NoneType]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Similar to orderbook_generator but instead of yielding a full constructed orderbook
+while maintaining a full local orderbook, a partial orderbook with level for both bids and
+asks are yielded and only a partial orderbook is maintained. This generator should be much
+faster than orderbook_generator.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>last_update_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>target update id to begin iterator. The first item
+from the iterator will be the first snapshot with last update id that
+is strictly greater than the one applied. Sucessive item will be constructed
+with diff stream while a local orderbook is maintained.
+See the link below for detail
+<a href="https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly">https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly</a>
+for more detail.</dd>
+<dt><strong><code>symbol</code></strong> :&ensp;<code>str</code></dt>
+<dd>symbol for orderbook to reconstruct</dd>
+<dt><strong><code>level</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>levels of orderbook to return. Defaults to 10.</dd>
+<dt><strong><code>block_size</code></strong> :&ensp;<code>Optional[int]</code>, optional</dt>
+<dd>pagniate size for executing SQL queries. None
+means all data are retrived at once. Defaults to 5000.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>ignore</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><code><a title="replay.PartialBook" href="#replay.PartialBook">PartialBook</a></code></dt>
+<dd>Partial Orderbook object representing reconstructed orderbook</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def partial_orderbook_generator(
+    last_update_id: int, symbol: str, level: int = 10, block_size: Optional[int] = 5_000
+) -&gt; Generator[PartialBook, None, None]:
+    &#34;&#34;&#34;Similar to orderbook_generator but instead of yielding a full constructed orderbook
+    while maintaining a full local orderbook, a partial orderbook with level for both bids and
+    asks are yielded and only a partial orderbook is maintained. This generator should be much
+    faster than orderbook_generator.
+
+    Args:
+        last_update_id (int): target update id to begin iterator. The first item
+            from the iterator will be the first snapshot with last update id that
+            is strictly greater than the one applied. Sucessive item will be constructed
+            with diff stream while a local orderbook is maintained.
+            See the link below for detail
+            https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
+            for more detail.
+        symbol (str): symbol for orderbook to reconstruct
+        level (int, optional): levels of orderbook to return. Defaults to 10.
+        block_size (Optional[int], optional): pagniate size for executing SQL queries. None
+            means all data are retrived at once. Defaults to 5000.
+
+    Raises:
+        ValueError: ignore
+
+    Yields:
+        PartialBook: Partial Orderbook object representing reconstructed orderbook
+    &#34;&#34;&#34;
+    database = CONFIG.db_name
+    db = Database(CONFIG.db_name)
+    client = Client(host=CONFIG.host_name)
+    client.execute(f&#34;USE {database}&#34;)
+
+    qs = (
+        DepthSnapshot.objects_in(db).filter(
+            DepthSnapshot.symbol == symbol.upper(),
+            DepthSnapshot.last_update_id &gt; last_update_id,
+        )
+    ).order_by(&#34;timestamp&#34;)
+
+    sql_result = client.execute(qs.as_sql())
+    if len(sql_result) == 0:
+        return
+    snapshot = sql_result.pop(0)
+    next_snapshot = sql_result.pop(0) if sql_result else None
+    client.disconnect()
+    (
+        timestamp,
+        last_update_id,
+        bids_quantity,
+        bids_price,
+        asks_quantity,
+        asks_price,
+        _,
+    ) = snapshot
+
+    bids_book = SortedDict(lambda x: -x, lists_to_dict(bids_price, bids_quantity))
+    asks_book = SortedDict(lists_to_dict(asks_price, asks_quantity))
+
+    bids_items = bids_book.items()[:level]
+    asks_items = asks_book.items()[:level]
+
+    result = [
+        val for (bids, asks) in zip(bids_items, asks_items) for val in chain(bids, asks)
+    ]
+
+    yield PartialBook(
+        timestamp=timestamp, last_update_id=last_update_id, book=result, symbol=symbol
+    )
+    prev_final_update_id = None
+    for diff_stream in diff_depth_stream_generator(last_update_id, symbol, block_size):
+        # https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
+        (
+            timestamp,
+            first_update_id,
+            final_update_id,
+            diff_bids_quantity,
+            diff_bids_price,
+            diff_asks_quantity,
+            diff_asks_price,
+            _,
+        ) = diff_stream
+
+        if (
+            prev_final_update_id is not None
+            and prev_final_update_id + 1 != first_update_id
+        ):
+            return
+
+        prev_final_update_id = final_update_id
+
+        if prev_final_update_id is None and (
+            last_update_id + 1 &lt; first_update_id or last_update_id + 1 &gt; final_update_id
+        ):
+            raise ValueError()
+
+        if next_snapshot is not None and (
+            first_update_id &lt;= next_snapshot[1] + 1 &lt;= final_update_id
+        ):
+            (
+                _,
+                _,
+                bids_quantity,
+                bids_price,
+                asks_quantity,
+                asks_price,
+                _,
+            ) = next_snapshot
+
+            bids_book.clear()
+            asks_book.clear()
+            bids_book.update(zip(bids_price, bids_quantity))
+            asks_book.update(zip(asks_price, asks_quantity))
+
+            next_snapshot = sql_result.pop(0) if sql_result else None
+
+        update_book(bids_book, diff_bids_price, diff_bids_quantity)
+        update_book(asks_book, diff_asks_price, diff_asks_quantity)
+
+        bids_items = bids_book.items()[:level]
+        asks_items = asks_book.items()[:level]
+
+        result = [
+            val
+            for (bids, asks) in zip(bids_items, asks_items)
+            for val in chain(bids, asks)
+        ]
+
+        yield PartialBook(
+            timestamp=timestamp,
+            last_update_id=final_update_id,
+            book=result,
+            symbol=symbol,
+        )</code></pre>
+</details>
+</dd>
+<dt id="replay.update_book"><code class="name flex">
+<span>def <span class="ident">update_book</span></span>(<span>book: Dict[float, float], price: List[float], quantity: List[float]) ‑> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_book(
+    book: Dict[float, float], price: List[float], quantity: List[float]
+) -&gt; None:
+    for p, q in zip(price, quantity):
+        if q == 0:
+            book.pop(p, 0)
+        else:
+            book[p] = q</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="replay.DataBlock"><code class="flex name class">
+<span>class <span class="ident">DataBlock</span></span>
+<span>(</span><span>symbol: str, last_update_id: int, block_size: int = 5000)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Data block class that represents a continuous stream of diff depth stream.</p>
+<p>A continuous stream of diff depth stream is a abstract collection of diff depth stream
+where the final_update_id of previous diff equals to the first_update_id - 1 of the next.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>client</code></strong></dt>
+<dd>clickhouse driver client object</dd>
+<dt><strong><code>settings</code></strong></dt>
+<dd>settings for SQL execution</dd>
+<dt><strong><code>beginning_update_id</code></strong></dt>
+<dd>first update id included in the data block</dd>
+<dt><strong><code>beginning_timestamp</code></strong></dt>
+<dd>timestamp associated with first diff depth stream</dd>
+<dt><strong><code>ending_update_id</code></strong></dt>
+<dd>last update id included in the data block</dd>
+<dt><strong><code>ending_timestamp</code></strong></dt>
+<dd>timestamp associated with last diff depth stream</dd>
+<dt><strong><code>block_snapshot_ids</code></strong></dt>
+<dd>list of snapshot ids within data block</dd>
+<dt><strong><code>symbol</code></strong></dt>
+<dd>symbol for the data block</dd>
+<dt><strong><code>size</code></strong></dt>
+<dd>number of diff depth stream in the data block</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DataBlock:
+    &#34;&#34;&#34;Data block class that represents a continuous stream of diff depth stream.
+
+    A continuous stream of diff depth stream is a abstract collection of diff depth stream
+    where the final_update_id of previous diff equals to the first_update_id - 1 of the next.
+
+    Attributes:
+        client: clickhouse driver client object
+        settings: settings for SQL execution
+        beginning_update_id: first update id included in the data block
+        beginning_timestamp: timestamp associated with first diff depth stream
+        ending_update_id: last update id included in the data block
+        ending_timestamp: timestamp associated with last diff depth stream
+        block_snapshot_ids: list of snapshot ids within data block
+        symbol: symbol for the data block
+        size: number of diff depth stream in the data block
+    &#34;&#34;&#34;
+
+    client: Client
+    settings: Dict[str, Any]
+    beginning_update_id: int
+    beginning_timestamp: datetime
+    ending_update_id: int
+    ending_timestamp: datetime
+    block_snapshot_ids: List[int]
+    symbol: str
+    size: int
+
+    def __init__(self, symbol: str, last_update_id: int, block_size: int = 5_000):
+        self.symbol = symbol
+        database = CONFIG.db_name
+        self.client = Client(host=CONFIG.host_name)
+        self.client.execute(f&#34;USE {database}&#34;)
+        sql = (
+            &#34;SELECT first_update_id, final_update_id FROM diffdepthstream &#34;
+            f&#34;WHERE symbol=&#39;{symbol}&#39; AND first_update_id&gt;{last_update_id} &#34;
+            &#34;ORDER BY first_update_id&#34;
+        )
+        self.settings = {&#34;max_block_size&#34;: block_size}
+        rows_gen = self.client.execute_iter(sql, settings=self.settings)
+        prev_update_id = None
+        self.size = 0
+        for row in rows_gen:
+            self.size += 1
+            if prev_update_id:
+                first_update_id, final_update_id = row
+                if prev_update_id + 1 != first_update_id:
+                    self.ending_update_id = prev_update_id
+                    self.size -= 1
+                    break
+                else:
+                    prev_update_id = final_update_id
+            else:
+                first_update_id, prev_update_id = row
+                self.beginning_update_id = first_update_id
+        else:
+            self.ending_update_id = prev_update_id
+
+        if self.ending_update_id is None:
+            return
+        self.client.disconnect()
+        self.client.execute(f&#34;USE {database}&#34;)
+
+        self.beginning_timestamp = self.client.execute(
+            (
+                &#34;SELECT timestamp FROM diffdepthstream &#34;
+                f&#34;WHERE first_update_id={self.beginning_update_id} AND &#34;
+                f&#34;symbol=&#39;{symbol}&#39;&#34;
+            )
+        )[0][0]
+
+        self.ending_timestamp = self.client.execute(
+            (
+                &#34;SELECT timestamp FROM diffdepthstream &#34;
+                f&#34;WHERE final_update_id={self.ending_update_id} AND &#34;
+                f&#34;symbol=&#39;{symbol}&#39;&#34;
+            )
+        )[0][0]
+
+        self.block_snapshot_ids = [
+            id_
+            for id_ in get_snapshots_update_ids(symbol)
+            if self.beginning_update_id &lt;= id_ + 1 &lt;= self.ending_update_id
+        ]
+        self.block_snapshot_ids
+
+    def fetch_partial_book(self, level: int = 10, block_size: int = 5_000):
+        &#34;&#34;&#34;Returns a generator for the partial book
+
+        Args:
+            level (int, optional): See `partial_book_generator` . Defaults to 10.
+            block_size (int, optional): See `partial_book_generator`. Defaults to 5_000.
+
+        Returns:
+            Generator[PartialBook]: generator for the parital book
+        &#34;&#34;&#34;
+        return partial_orderbook_generator(
+            self.beginning_update_id - 1, self.symbol, level, block_size
+        )
+
+    def __repr__(self) -&gt; str:
+        if self.ending_update_id:
+            return (
+                f&#34;Datablock(symbol=&#39;{self.symbol}&#39;, size={self.size},&#34;
+                f&#34; {self.beginning_update_id},&#34;
+                f&#34; {self.ending_update_id})&#34;
+            )
+        else:
+            return (
+                f&#34;Datablock(symbol=&#39;{self.symbol}&#39;, {self.beginning_update_id}, EMPTY)&#34;
+            )
+
+    def __len__(self) -&gt; int:
+        return self.size</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="replay.DataBlock.beginning_timestamp"><code class="name">var <span class="ident">beginning_timestamp</span> : datetime.datetime</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="replay.DataBlock.beginning_update_id"><code class="name">var <span class="ident">beginning_update_id</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="replay.DataBlock.block_snapshot_ids"><code class="name">var <span class="ident">block_snapshot_ids</span> : List[int]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="replay.DataBlock.client"><code class="name">var <span class="ident">client</span> : clickhouse_driver.client.Client</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="replay.DataBlock.ending_timestamp"><code class="name">var <span class="ident">ending_timestamp</span> : datetime.datetime</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="replay.DataBlock.ending_update_id"><code class="name">var <span class="ident">ending_update_id</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="replay.DataBlock.settings"><code class="name">var <span class="ident">settings</span> : Dict[str, Any]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="replay.DataBlock.size"><code class="name">var <span class="ident">size</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="replay.DataBlock.symbol"><code class="name">var <span class="ident">symbol</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="replay.DataBlock.fetch_partial_book"><code class="name flex">
+<span>def <span class="ident">fetch_partial_book</span></span>(<span>self, level: int = 10, block_size: int = 5000)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns a generator for the partial book</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>level</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>See <code>partial_book_generator</code> . Defaults to 10.</dd>
+<dt><strong><code>block_size</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>See <code>partial_book_generator</code>. Defaults to 5_000.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Generator[<a title="replay.PartialBook" href="#replay.PartialBook">PartialBook</a>]</code></dt>
+<dd>generator for the parital book</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fetch_partial_book(self, level: int = 10, block_size: int = 5_000):
+    &#34;&#34;&#34;Returns a generator for the partial book
+
+    Args:
+        level (int, optional): See `partial_book_generator` . Defaults to 10.
+        block_size (int, optional): See `partial_book_generator`. Defaults to 5_000.
+
+    Returns:
+        Generator[PartialBook]: generator for the parital book
+    &#34;&#34;&#34;
+    return partial_orderbook_generator(
+        self.beginning_update_id - 1, self.symbol, level, block_size
+    )</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="replay.FullBook"><code class="flex name class">
+<span>class <span class="ident">FullBook</span></span>
+<span>(</span><span>timestamp: datetime.datetime, last_update_id: int, bids: Dict[float, float], asks: Dict[float, float], symbol: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The full orderbook object</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FullBook:
+    &#34;&#34;&#34;The full orderbook object&#34;&#34;&#34;
+
+    timestamp: datetime
+    &#34;&#34;&#34;Timestamp for the current orderbook
+    &#34;&#34;&#34;
+    last_update_id: int
+    &#34;&#34;&#34;Last update id of the current orderbook
+    &#34;&#34;&#34;
+    bids: Dict[float, float]
+    &#34;&#34;&#34;Bids orderbook mapping from price to volumn
+    &#34;&#34;&#34;
+    asks: Dict[float, float]
+    &#34;&#34;&#34;Asks orderbook mapping from price to volumn
+    &#34;&#34;&#34;
+    symbol: str
+    &#34;&#34;&#34;Symbol of the orderbook
+    &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="replay.FullBook.asks"><code class="name">var <span class="ident">asks</span> : Dict[float, float]</code></dt>
+<dd>
+<div class="desc"><p>Asks orderbook mapping from price to volumn</p></div>
+</dd>
+<dt id="replay.FullBook.bids"><code class="name">var <span class="ident">bids</span> : Dict[float, float]</code></dt>
+<dd>
+<div class="desc"><p>Bids orderbook mapping from price to volumn</p></div>
+</dd>
+<dt id="replay.FullBook.last_update_id"><code class="name">var <span class="ident">last_update_id</span> : int</code></dt>
+<dd>
+<div class="desc"><p>Last update id of the current orderbook</p></div>
+</dd>
+<dt id="replay.FullBook.symbol"><code class="name">var <span class="ident">symbol</span> : str</code></dt>
+<dd>
+<div class="desc"><p>Symbol of the orderbook</p></div>
+</dd>
+<dt id="replay.FullBook.timestamp"><code class="name">var <span class="ident">timestamp</span> : datetime.datetime</code></dt>
+<dd>
+<div class="desc"><p>Timestamp for the current orderbook</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="replay.PartialBook"><code class="flex name class">
+<span>class <span class="ident">PartialBook</span></span>
+<span>(</span><span>timestamp: datetime.datetime, last_update_id: int, book: List[float], symbol: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The partial orderbook object</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PartialBook:
+    &#34;&#34;&#34;The partial orderbook object&#34;&#34;&#34;
+
+    timestamp: datetime
+    &#34;&#34;&#34;Timestamp for the current orderbook
+    &#34;&#34;&#34;
+    last_update_id: int
+    &#34;&#34;&#34;Last update id of the current orderbook
+    &#34;&#34;&#34;
+    book: List[float]
+    &#34;&#34;&#34;Partial order book in the following format:
+
+```[ask_1_price, ask_1_vol, bids_1_price, bids_1_vol, ask_2_price,...,bids_n_vol]```
+    where n is the level.
+    &#34;&#34;&#34;
+    symbol: str
+    &#34;&#34;&#34;Symbol of the orderbook
+    &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="replay.PartialBook.book"><code class="name">var <span class="ident">book</span> : List[float]</code></dt>
+<dd>
+<div class="desc"><p>Partial order book in the following format:</p>
+<p><code>[ask_1_price, ask_1_vol, bids_1_price, bids_1_vol, ask_2_price,...,bids_n_vol]</code>
+where n is the level.</p></div>
+</dd>
+<dt id="replay.PartialBook.last_update_id"><code class="name">var <span class="ident">last_update_id</span> : int</code></dt>
+<dd>
+<div class="desc"><p>Last update id of the current orderbook</p></div>
+</dd>
+<dt id="replay.PartialBook.symbol"><code class="name">var <span class="ident">symbol</span> : str</code></dt>
+<dd>
+<div class="desc"><p>Symbol of the orderbook</p></div>
+</dd>
+<dt id="replay.PartialBook.timestamp"><code class="name">var <span class="ident">timestamp</span> : datetime.datetime</code></dt>
+<dd>
+<div class="desc"><p>Timestamp for the current orderbook</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="replay.diff_depth_stream_generator" href="#replay.diff_depth_stream_generator">diff_depth_stream_generator</a></code></li>
+<li><code><a title="replay.get_all_data_blocks" href="#replay.get_all_data_blocks">get_all_data_blocks</a></code></li>
+<li><code><a title="replay.get_snapshots_update_ids" href="#replay.get_snapshots_update_ids">get_snapshots_update_ids</a></code></li>
+<li><code><a title="replay.lists_to_dict" href="#replay.lists_to_dict">lists_to_dict</a></code></li>
+<li><code><a title="replay.orderbook_generator" href="#replay.orderbook_generator">orderbook_generator</a></code></li>
+<li><code><a title="replay.partial_orderbook_generator" href="#replay.partial_orderbook_generator">partial_orderbook_generator</a></code></li>
+<li><code><a title="replay.update_book" href="#replay.update_book">update_book</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="replay.DataBlock" href="#replay.DataBlock">DataBlock</a></code></h4>
+<ul class="two-column">
+<li><code><a title="replay.DataBlock.beginning_timestamp" href="#replay.DataBlock.beginning_timestamp">beginning_timestamp</a></code></li>
+<li><code><a title="replay.DataBlock.beginning_update_id" href="#replay.DataBlock.beginning_update_id">beginning_update_id</a></code></li>
+<li><code><a title="replay.DataBlock.block_snapshot_ids" href="#replay.DataBlock.block_snapshot_ids">block_snapshot_ids</a></code></li>
+<li><code><a title="replay.DataBlock.client" href="#replay.DataBlock.client">client</a></code></li>
+<li><code><a title="replay.DataBlock.ending_timestamp" href="#replay.DataBlock.ending_timestamp">ending_timestamp</a></code></li>
+<li><code><a title="replay.DataBlock.ending_update_id" href="#replay.DataBlock.ending_update_id">ending_update_id</a></code></li>
+<li><code><a title="replay.DataBlock.fetch_partial_book" href="#replay.DataBlock.fetch_partial_book">fetch_partial_book</a></code></li>
+<li><code><a title="replay.DataBlock.settings" href="#replay.DataBlock.settings">settings</a></code></li>
+<li><code><a title="replay.DataBlock.size" href="#replay.DataBlock.size">size</a></code></li>
+<li><code><a title="replay.DataBlock.symbol" href="#replay.DataBlock.symbol">symbol</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="replay.FullBook" href="#replay.FullBook">FullBook</a></code></h4>
+<ul class="">
+<li><code><a title="replay.FullBook.asks" href="#replay.FullBook.asks">asks</a></code></li>
+<li><code><a title="replay.FullBook.bids" href="#replay.FullBook.bids">bids</a></code></li>
+<li><code><a title="replay.FullBook.last_update_id" href="#replay.FullBook.last_update_id">last_update_id</a></code></li>
+<li><code><a title="replay.FullBook.symbol" href="#replay.FullBook.symbol">symbol</a></code></li>
+<li><code><a title="replay.FullBook.timestamp" href="#replay.FullBook.timestamp">timestamp</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="replay.PartialBook" href="#replay.PartialBook">PartialBook</a></code></h4>
+<ul class="">
+<li><code><a title="replay.PartialBook.book" href="#replay.PartialBook.book">book</a></code></li>
+<li><code><a title="replay.PartialBook.last_update_id" href="#replay.PartialBook.last_update_id">last_update_id</a></code></li>
+<li><code><a title="replay.PartialBook.symbol" href="#replay.PartialBook.symbol">symbol</a></code></li>
+<li><code><a title="replay.PartialBook.timestamp" href="#replay.PartialBook.timestamp">timestamp</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>
