@@ -1,3 +1,7 @@
+""" Replay modules.
+
+Inlcude all useful function and classes for reconstructing orderbook from database
+"""
 from datetime import datetime
 from typing import Any, Dict, Generator, List, Optional, Tuple
 from infi.clickhouse_orm.database import Database
@@ -40,10 +44,29 @@ def diff_depth_stream_generator(
 
 
 class DataBlock:
+    """Data block class that represents a continuous stream of diff depth stream.
+
+    A continuous stream of diff depth stream is a abstract collection of diff depth stream
+    where the final_update_id of previous diff equals to the first_update_id - 1 of the next.
+
+    Attributes:
+        client: clickhouse driver client object
+        settings: settings for SQL execution
+        beginning_update_id: first update id included in the data block
+        beginning_timestamp: timestamp associated with first diff depth stream
+        ending_update_id: last update id included in the data block
+        ending_timestamp: timestamp associated with last diff depth stream
+        block_snapshot_ids: list of snapshot ids within data block
+        symbol: symbol for the data block
+        size: number of diff depth stream in the data block
+    """
+
     client: Client
     settings: Dict[str, Any]
     beginning_update_id: int
+    beginning_timestamp: datetime
     ending_update_id: int
+    ending_timestamp: datetime
     block_snapshot_ids: List[int]
     symbol: str
     size: int
@@ -83,17 +106,21 @@ class DataBlock:
         self.client.disconnect()
         self.client.execute(f"USE {database}")
 
-        self.beginning_timestamp = self.client.execute((
-            "SELECT timestamp FROM diffdepthstream "
-            f"WHERE first_update_id={self.beginning_update_id} AND "
-            f"symbol='{symbol}'"
-            ))[0][0]
+        self.beginning_timestamp = self.client.execute(
+            (
+                "SELECT timestamp FROM diffdepthstream "
+                f"WHERE first_update_id={self.beginning_update_id} AND "
+                f"symbol='{symbol}'"
+            )
+        )[0][0]
 
-        self.ending_timestamp = self.client.execute((
-            "SELECT timestamp FROM diffdepthstream "
-            f"WHERE final_update_id={self.ending_update_id} AND "
-            f"symbol='{symbol}'"
-            ))[0][0]
+        self.ending_timestamp = self.client.execute(
+            (
+                "SELECT timestamp FROM diffdepthstream "
+                f"WHERE final_update_id={self.ending_update_id} AND "
+                f"symbol='{symbol}'"
+            )
+        )[0][0]
 
         self.block_snapshot_ids = [
             id_
@@ -101,6 +128,20 @@ class DataBlock:
             if self.beginning_update_id <= id_ + 1 <= self.ending_update_id
         ]
         self.block_snapshot_ids
+
+    def fetch_partial_book(self, level: int = 10, block_size: int = 5_000):
+        """Returns a generator for the partial book
+
+        Args:
+            level (int, optional): See `partial_book_generator` . Defaults to 10.
+            block_size (int, optional): See `partial_book_generator`. Defaults to 5_000.
+
+        Returns:
+            Generator[PartialBook]: generator for the parital book
+        """
+        return partial_orderbook_generator(
+            self.beginning_update_id - 1, self.symbol, level, block_size
+        )
 
     def __repr__(self) -> str:
         if self.ending_update_id:
