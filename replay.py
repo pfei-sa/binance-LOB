@@ -1,12 +1,16 @@
+""" Replay modules.
+
+Inlcude all useful function and classes for reconstructing orderbook from database
+"""
 from datetime import datetime
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Any, Dict, Generator, List, Optional, Tuple
 from infi.clickhouse_orm.database import Database
 from model import DiffDepthStream, DepthSnapshot
 from clickhouse_driver import Client
 from config import CONFIG
 from sortedcontainers import SortedDict
-from tqdm import tqdm
 from itertools import chain
+from dataclasses import dataclass
 
 
 def diff_depth_stream_generator(
@@ -39,14 +43,181 @@ def diff_depth_stream_generator(
             yield row
 
 
+class DataBlock:
+    """Data block class that represents a continuous stream of diff depth stream.
+
+    A continuous stream of diff depth stream is a abstract collection of diff depth stream
+    where the final_update_id of previous diff equals to the first_update_id - 1 of the next.
+
+    Attributes:
+        client: clickhouse driver client object
+        settings: settings for SQL execution
+        beginning_update_id: first update id included in the data block
+        beginning_timestamp: timestamp associated with first diff depth stream
+        ending_update_id: last update id included in the data block
+        ending_timestamp: timestamp associated with last diff depth stream
+        block_snapshot_ids: list of snapshot ids within data block
+        symbol: symbol for the data block
+        size: number of diff depth stream in the data block
+    """
+
+    client: Client
+    settings: Dict[str, Any]
+    beginning_update_id: int
+    beginning_timestamp: datetime
+    ending_update_id: int
+    ending_timestamp: datetime
+    block_snapshot_ids: List[int]
+    symbol: str
+    size: int
+
+    def __init__(self, symbol: str, last_update_id: int, block_size: int = 5_000):
+        self.symbol = symbol
+        database = CONFIG.db_name
+        self.client = Client(host=CONFIG.host_name)
+        self.client.execute(f"USE {database}")
+        sql = (
+            "SELECT first_update_id, final_update_id FROM diffdepthstream "
+            f"WHERE symbol='{symbol}' AND first_update_id>{last_update_id} "
+            "ORDER BY first_update_id"
+        )
+        self.settings = {"max_block_size": block_size}
+        rows_gen = self.client.execute_iter(sql, settings=self.settings)
+        prev_update_id = None
+        self.size = 0
+        for row in rows_gen:
+            self.size += 1
+            if prev_update_id:
+                first_update_id, final_update_id = row
+                if prev_update_id + 1 != first_update_id:
+                    self.ending_update_id = prev_update_id
+                    self.size -= 1
+                    break
+                else:
+                    prev_update_id = final_update_id
+            else:
+                first_update_id, prev_update_id = row
+                self.beginning_update_id = first_update_id
+        else:
+            self.ending_update_id = prev_update_id
+
+        if self.ending_update_id is None:
+            return
+        self.client.disconnect()
+        self.client.execute(f"USE {database}")
+
+        self.beginning_timestamp = self.client.execute(
+            (
+                "SELECT timestamp FROM diffdepthstream "
+                f"WHERE first_update_id={self.beginning_update_id} AND "
+                f"symbol='{symbol}'"
+            )
+        )[0][0]
+
+        self.ending_timestamp = self.client.execute(
+            (
+                "SELECT timestamp FROM diffdepthstream "
+                f"WHERE final_update_id={self.ending_update_id} AND "
+                f"symbol='{symbol}'"
+            )
+        )[0][0]
+
+        self.block_snapshot_ids = [
+            id_
+            for id_ in get_snapshots_update_ids(symbol)
+            if self.beginning_update_id <= id_ + 1 <= self.ending_update_id
+        ]
+        self.block_snapshot_ids
+
+    def fetch_partial_book(self, level: int = 10, block_size: int = 5_000):
+        """Returns a generator for the partial book
+
+        Args:
+            level (int, optional): See `partial_book_generator` . Defaults to 10.
+            block_size (int, optional): See `partial_book_generator`. Defaults to 5_000.
+
+        Returns:
+            Generator[PartialBook]: generator for the parital book
+        """
+        return partial_orderbook_generator(
+            self.beginning_update_id - 1, self.symbol, level, block_size
+        )
+
+    def __repr__(self) -> str:
+        if self.ending_update_id:
+            return (
+                f"Datablock(symbol='{self.symbol}', size={self.size},"
+                f" {self.beginning_update_id},"
+                f" {self.ending_update_id})"
+            )
+        else:
+            return (
+                f"Datablock(symbol='{self.symbol}', {self.beginning_update_id}, EMPTY)"
+            )
+
+    def __len__(self) -> int:
+        return self.size
+
+
+def get_all_data_blocks(
+    symbol: str, last_update_id: int, block_size: int = 5_000
+) -> List[DataBlock]:
+    datablocks = []
+    cur_block = DataBlock(symbol, last_update_id, block_size)
+    while cur_block.size != 0:
+        datablocks.append(cur_block)
+        cur_block = DataBlock(symbol, cur_block.ending_update_id, block_size)
+    return datablocks
+
+
+@dataclass
+class FullBook:
+    """The full orderbook object"""
+
+    timestamp: datetime
+    """Timestamp for the current orderbook
+    """
+    last_update_id: int
+    """Last update id of the current orderbook
+    """
+    bids: Dict[float, float]
+    """Bids orderbook mapping from price to volumn
+    """
+    asks: Dict[float, float]
+    """Asks orderbook mapping from price to volumn
+    """
+    symbol: str
+    """Symbol of the orderbook
+    """
+
+
+@dataclass
+class PartialBook:
+    """The partial orderbook object"""
+
+    timestamp: datetime
+    """Timestamp for the current orderbook
+    """
+    last_update_id: int
+    """Last update id of the current orderbook
+    """
+    book: List[float]
+    """Partial order book in the following format:
+
+```[ask_1_price, ask_1_vol, bids_1_price, bids_1_vol, ask_2_price,...,bids_n_vol]```
+    where n is the level.
+    """
+    symbol: str
+    """Symbol of the orderbook
+    """
+
+
 def orderbook_generator(
     last_update_id: int,
     symbol: str,
     block_size: Optional[int] = 5_000,
     return_copy: bool = True,
-) -> Generator[
-    Tuple[datetime, int, Dict[float, float], Dict[float, float], str], None, None
-]:
+) -> Generator[FullBook, None, None]:
     """Generator to iterate reconstructed full orderbook from diff stream where
     each element yielded are orderbook constructed from each stream update. The iterator
     is exhausted when there is a gap in the diff depth stream (probably due to connection lost
@@ -73,14 +244,7 @@ def orderbook_generator(
         ValueError: ignore
 
     Yields:
-        Generator[ Tuple[datetime, int, Dict[float, float], Dict[float, float], str], None, None ]:
-            A tuple with reconstructed orderbook. Where:
-            tuple[0] is the timestamp for orderbook
-            tuple[1] is the last update id
-            tuple[2] is the bids book
-            tuple[3] is the asks book
-                Both orderbook are returnd as dictionary mapping from price to quantity
-            tuple[4] is the symbol
+        FullBook: Full Orderbook object representing the reconstructed orderbook
     """
     database = CONFIG.db_name
     db = Database(CONFIG.db_name, db_url=f"http://{CONFIG.host_name}:8123/")
@@ -114,9 +278,21 @@ def orderbook_generator(
     asks_book = lists_to_dict(asks_price, asks_quantity)
 
     if return_copy:
-        yield (timestamp, last_update_id, bids_book.copy(), asks_book.copy(), symbol)
+        yield FullBook(
+            timestamp=timestamp,
+            last_update_id=last_update_id,
+            bids=bids_book.copy(),
+            asks=asks_book.copy(),
+            symbol=symbol,
+        )
     else:
-        yield (timestamp, last_update_id, bids_book, asks_book, symbol)
+        yield FullBook(
+            timestamp=timestamp,
+            last_update_id=last_update_id,
+            bids=bids_book,
+            asks=asks_book,
+            symbol=symbol,
+        )
 
     prev_final_update_id = None
     for diff_stream in diff_depth_stream_generator(last_update_id, symbol, block_size):
@@ -168,20 +344,26 @@ def orderbook_generator(
         update_book(asks_book, diff_asks_price, diff_asks_quantity)
 
         if return_copy:
-            yield (
-                timestamp,
-                final_update_id,
-                bids_book.copy(),
-                asks_book.copy(),
-                symbol,
+            yield FullBook(
+                timestamp=timestamp,
+                last_update_id=final_update_id,
+                bids=bids_book.copy(),
+                asks=asks_book.copy(),
+                symbol=symbol,
             )
         else:
-            yield (timestamp, final_update_id, bids_book, asks_book, symbol)
+            yield FullBook(
+                timestamp=timestamp,
+                last_update_id=final_update_id,
+                bids=bids_book,
+                asks=asks_book,
+                symbol=symbol,
+            )
 
 
 def partial_orderbook_generator(
     last_update_id: int, symbol: str, level: int = 10, block_size: Optional[int] = 5_000
-) -> Generator[Tuple[datetime, int, List[float], str], None, None]:
+) -> Generator[PartialBook, None, None]:
     """Similar to orderbook_generator but instead of yielding a full constructed orderbook
     while maintaining a full local orderbook, a partial orderbook with level for both bids and
     asks are yielded and only a partial orderbook is maintained. This generator should be much
@@ -204,14 +386,7 @@ def partial_orderbook_generator(
         ValueError: ignore
 
     Yields:
-        Generator[Tuple[datetime, int, List[float], str], None, None]:
-            A tuple with reconstructed orderbook. Where:
-            tuple[0] is the timestamp for orderbook
-            tuple[1] is the last update id
-            tuple[2] is the result orderbook in the folloing format
-                [bid_1_price, bid_1_qty, ask_1_price, ask_1_qty, bid_2_price,..., ask_n_qty]
-                where n is the level supplied
-            tuple[3] is the symbol
+        PartialBook: Partial Orderbook object representing reconstructed orderbook
     """
     database = CONFIG.db_name
     db = Database(CONFIG.db_name)
@@ -251,7 +426,9 @@ def partial_orderbook_generator(
         val for (bids, asks) in zip(bids_items, asks_items) for val in chain(bids, asks)
     ]
 
-    yield (timestamp, last_update_id, result, symbol)
+    yield PartialBook(
+        timestamp=timestamp, last_update_id=last_update_id, book=result, symbol=symbol
+    )
     prev_final_update_id = None
     for diff_stream in diff_depth_stream_generator(last_update_id, symbol, block_size):
         # https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly
@@ -311,7 +488,12 @@ def partial_orderbook_generator(
             for val in chain(bids, asks)
         ]
 
-        yield (timestamp, final_update_id, result, symbol)
+        yield PartialBook(
+            timestamp=timestamp,
+            last_update_id=final_update_id,
+            book=result,
+            symbol=symbol,
+        )
 
 
 def lists_to_dict(price: List[float], quantity: List[float]) -> Dict[float, float]:
@@ -332,19 +514,17 @@ def get_snapshots_update_ids(symbol: str) -> List[int]:
     database = CONFIG.db_name
     client = Client(host=CONFIG.host_name)
     client.execute(f"USE {database}")
-    return client.execute(
-        f"SELECT last_update_id FROM depthsnapshot WHERE symbol = '{symbol.upper()}' ORDER BY "
-        "timestamp"
-    )
+    return [
+        id_[0]
+        for id_ in client.execute(
+            f"SELECT last_update_id FROM depthsnapshot WHERE symbol = '{symbol.upper()}' ORDER BY "
+            "timestamp"
+        )
+    ]
 
 
 if __name__ == "__main__":
-    i = 0
-    first_id = last_id = 0
-    for r in tqdm(orderbook_generator(0, "ETHUSDT", block_size=5_000)):
-        i += 1
-        if r[1] >= 7494682003:
-            break
-    print(i)
-    print(r)
-    print(get_snapshots_update_ids("ETHUSDT"))
+    datablocks = get_all_data_blocks("DOGEUSDT", 0)
+    for block in datablocks:
+        print(block)
+        print(block.ending_timestamp - block.beginning_timestamp)
