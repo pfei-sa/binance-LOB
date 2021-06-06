@@ -54,15 +54,19 @@ def depth_stream_url(symbol: str, asset_type: AssetType) -> str:
     elif asset_type == AssetType.USD_M:
         return f"wss://fstream.binance.com/ws/{endpoint}"
     else:
-        raise NotImplementedError()
+        return f"wss://dstream.binance.com/ws/{endpoint}"
 
 
-async def get_full_depth(symbol: str, session: ClientSession, database: Database, asset_type: AssetType):
+async def get_full_depth(
+    symbol: str, session: ClientSession, database: Database, asset_type: AssetType
+):
     limit = CONFIG.full_fetch_limit
     if asset_type == AssetType.SPOT:
         url = f"https://api.binance.com/api/v3/depth?symbol={symbol}&limit={limit}"
     elif asset_type == AssetType.USD_M:
         url = f"https://fapi.binance.com/fapi/v1/depth?symbol={symbol}&limit={limit}"
+    elif asset_type == AssetType.COIN_M:
+        url = f"https://dapi.binance.com/dapi/v1/depth?symbol={symbol}&limit={limit}"
     async with session.get(url) as resp:
         resp_json = await resp.json()
         msg = DepthSnapshotMsg(**resp_json)
@@ -85,10 +89,12 @@ async def handle_depth_stream(
     database: Database,
     logger: Logger,
     loop: AbstractEventLoop,
-    asset_type: AssetType
+    asset_type: AssetType,
 ):
     next_full_fetch = time()
-    logger.log_msg(f"Connecting to {asset_type.value + symbol} stream", LoggingLevel.INFO, symbol)
+    logger.log_msg(
+        f"Connecting to {asset_type.value + symbol} stream", LoggingLevel.INFO, symbol
+    )
     prev_final_update_id = None
     while True:
         async with session.ws_connect(depth_stream_url(symbol, asset_type)) as ws:
@@ -118,12 +124,17 @@ async def handle_depth_stream(
                             symbol_full,
                         )
                         next_full_fetch += CONFIG.full_fetch_interval
-                        loop.create_task(get_full_depth(symbol, session, database, asset_type))
-                    if prev_final_update_id and prev_final_update_id + 1 != first_update_id:
+                        loop.create_task(
+                            get_full_depth(symbol, session, database, asset_type)
+                        )
+                    if (
+                        prev_final_update_id
+                        and prev_final_update_id + 1 != first_update_id
+                    ):
                         logger.log_msg(
                             f"LOB dropped for {symbol_full}, refetching full market depth",
                             LoggingLevel.INFO,
-                            symbol_full
+                            symbol_full,
                         )
 
                     dispatcher.insert(
@@ -156,20 +167,34 @@ async def setup():
     for symbol in CONFIG.symbols:
         if "USD_" in symbol:
             loop.create_task(
-                handle_depth_stream(symbol[4:], session, dispatcher, database, logger, loop, AssetType.USD_M)
+                handle_depth_stream(
+                    symbol[4:],
+                    session,
+                    dispatcher,
+                    database,
+                    logger,
+                    loop,
+                    AssetType.USD_M,
+                )
             )
         elif "COIN_" in symbol:
             loop.create_task(
-                handle_depth_stream(symbol[5:], session, dispatcher, database, logger, loop, AssetType.COIN_M)
+                handle_depth_stream(
+                    symbol[5:],
+                    session,
+                    dispatcher,
+                    database,
+                    logger,
+                    loop,
+                    AssetType.COIN_M,
+                )
             )
         else:
             loop.create_task(
-                handle_depth_stream(symbol, session, dispatcher, database, logger, loop, AssetType.SPOT)
+                handle_depth_stream(
+                    symbol, session, dispatcher, database, logger, loop, AssetType.SPOT
+                )
             )
-
-
-
-
 
 
 if __name__ == "__main__":
