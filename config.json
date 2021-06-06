@@ -3,14 +3,8 @@
         "ethusdt",
         "btcusdt",
         "dogeusdt",
-        "shibusdt",
-        "eosusdt",
-        "ethbusd",
-        "bnbusdt",
-        "xrpusdt",
-        "ltcusdt",
-        "ethbtc",
-        "bnbbtc"
+        "USD_btcusdt",
+        "COIN_btcusd_perp"
     ],
     "full_fetch_interval": 3600,
     "full_fetch_limit": 1000,

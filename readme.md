@@ -17,17 +17,14 @@ Modify config.json to control the behavior of the data collection process:
 {
     // symbols to track
     "symbols": [
+        // Spot symbols
         "ethusdt",
         "btcusdt",
         "dogeusdt",
-        "shibusdt",
-        "eosusdt",
-        "ethbusd",
-        "bnbusdt",
-        "xrpusdt",
-        "ltcusdt",
-        "ethbtc",
-        "bnbbtc"
+        // USD-M Futures needs 'USD_' prefix
+        "USD_btcusdt",
+        // COIN-M Futures needs 'COIN_' prefix
+        "COIN_btcusd_perp"
     ],
     // interval to refetch full orderbook snapshot (seconds)
     "full_fetch_interval": 3600,
