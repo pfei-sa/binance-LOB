@@ -61,13 +61,11 @@ for r in orderbook_generator(0, "ETHUSDT", block_size=5000):
     # here last_update_id=0 is supplied to contruct orderbook
     # from first avalible snapshot.
     # block_size should also be used if the database is really large
-    (
-        timestamp, last_update_id, bids_book, asks_book, symbol
-    ) = r
     ... 
     #process yor orderbook
 ```
 
 The generator is exhausted when there is a gap in the diff depth stream  (probably due to connection lost while logging data), i.e. the previous `final_update_id + 1 != first_update_id`, or there is no more diff stream in the database. To skip the gap and start a new generator, simply use the last `last_update_id` from previus iteration again.
 
-See docstring for both function for more detail.
+## Documentation
+See [documentation](https://sa-tony.github.io/binance-LOB/replay) for detail on how to use the replay modules
