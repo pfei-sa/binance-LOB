@@ -527,7 +527,7 @@ def get_all_symbols() -> List[str]:
     database = CONFIG.db_name
     client = Client(host=CONFIG.host_name)
     client.execute(f"USE {database}")
-    return [s[0] for s in client.execute('SELECT DISTINCT symbol FROM diffdepthstream')]
+    return [s[0] for s in client.execute("SELECT DISTINCT symbol FROM diffdepthstream")]
 
 
 if __name__ == "__main__":
