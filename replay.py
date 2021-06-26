@@ -204,7 +204,7 @@ class PartialBook:
     book: List[float]
     """Partial order book in the following format:
 
-```[ask_1_price, ask_1_vol, bids_1_price, bids_1_vol, ask_2_price,...,bids_n_vol]```
+```[bid_1_price, bid_1_vol, ask_1_price, ask_1_vol, bid_2_price,...,ask_n_vol]```
     where n is the level.
     """
     symbol: str
